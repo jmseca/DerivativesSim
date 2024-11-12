@@ -41,7 +41,7 @@ if __name__ == "__main__":
     from WelcomeFrame import WelcomeFrame
     from PickFrame import PickFrame
     
-    geom = "1200x600"
+    geom = "1600x800"
     
     # Init App 
     app = AppRoot(geom)
