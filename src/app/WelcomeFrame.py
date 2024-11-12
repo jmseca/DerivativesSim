@@ -38,30 +38,27 @@ class WelcomeFrame(tk.Frame):
     def build(self):
         
         # Add PMC background
-        #background_image = Image.open("pmc.png")  # Replace with your image file name
-        #background_photo = ImageTk.PhotoImage(background_image)
-        #print("I was here")
-
-        #background_label = tk.Label(self, image=background_photo)
-        #background_label.place(x=0, y=0, relwidth=1, relheight=1)
+        pmc_img = Image.open("../../media/pmc.png").resize((1600,800))                 
+        pmc_bg = ImageTk.PhotoImage(pmc_img)        
         
-        bg = tk.PhotoImage(file = "pmc.png")
-        label1 = tk.Label( self, image = bg) 
-        label1.img = bg
-        label1.place(x = 0, y = 0) 
+        welcome_bg = tk.Label( self, image = pmc_bg) 
+        welcome_bg.img = pmc_bg
+        welcome_bg.place(x = 0, y = 0) 
         
                 
-        # Create "Get Started" button
+        # Add "Get Started" button
         get_started_button = tk.Button(
             self,
             text="Get Started",
-            font=("Arial", 16),
-            bg="blue",
-            fg="black",
+            font=("Arial", 24),
+            bg="#1f3044",
+            fg="#f0f3f5",
+            width=20,
+            height=2,
             command=self.get_started_cb  # Call function to show the CR7 frame
         )   
         
         get_started_button.pack(pady=100)
         
         # Center the button in the middle of the screen
-        get_started_button.place(relx=0.5, rely=0.5, anchor="center")
+        get_started_button.place(relx=0.5, rely=0.6, anchor="center")
