@@ -2,6 +2,12 @@
 
 import tkinter as tk
 
+import os
+import sys
+sys.path.append("../derivatives/options/")
+
+from option import Option
+
 
 class AppRoot(tk.Tk):
     
@@ -50,7 +56,7 @@ if __name__ == "__main__":
     # Init all the frames
     welcome_frame = WelcomeFrame(app, geom)
     pick_frame = PickFrame(app, geom)
-    option_frame = OptionFrame(app, geom)
+    option_frame = OptionFrame(app, geom, Option())
     
     
     # Add all the frames to the App
