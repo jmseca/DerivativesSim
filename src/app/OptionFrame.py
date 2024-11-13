@@ -123,6 +123,9 @@ class OptionFrame(tk.Frame):
             erro_tag.place(x=0, y=470)
 
             
+            
+    def export_report_cb(self):
+        self.option.write_report()
         
         
     def build(self):
@@ -304,12 +307,28 @@ class OptionFrame(tk.Frame):
         self.outputs[OptionFrame.delta_label] = delta_label
         
         # Gamma
-        gamma_tag = tk.Label(self, text="Delta", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
+        gamma_tag = tk.Label(self, text="Gamma", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
         gamma_tag.place(x=1000, y=350)
         
         gamma_label = tk.Label(self, text=f"{round(self.option.gamma(),2)}", font=("Arial", 18, "bold"),
             fg=self.fg, bg="light grey", anchor="e")
         gamma_label.place(x=1000, y=380, width=300, height=35)
         self.outputs[OptionFrame.gamma_label] = gamma_label
+        
+        ### END OF GREEKS ###
+        
+        # Export Report Button
+        export_button = tk.Button(
+            self,
+            text="Export\nSensitivity Report",
+            font=("Arial", 24, "bold"),
+            bg="#f0f3f5",
+            fg="#1f3044",
+            width=20,
+            height=2,
+            command=self.export_report_cb 
+        )   
+        export_button.pack(pady=100)
+        export_button.place(x=1000, y=600)
         
         

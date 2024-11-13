@@ -14,7 +14,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Spacer, Page
 from reportlab.lib.styles import getSampleStyleSheet
 
 
-from option import Option, OptionType
 from option_pricing import black_scholes
 
 class OptionReport:
@@ -30,13 +29,10 @@ class OptionReport:
     - Risk-free rate Sensitivity
     """
     
+    doc_destination = "../../reports/"
+    img_temp_destination = "../../media/temp/"
     
-    
-    
-    doc_destination = "../../../reports/"
-    img_temp_destination = "../../../media/temp/"
-    
-    def __init__(self, fname: str, option: Option):
+    def __init__(self, fname: str, option):
         
         self.option = option
         self.fname = OptionReport.doc_destination + fname + ".pdf"
@@ -63,6 +59,8 @@ class OptionReport:
         plt.tight_layout()
         
         # Save it
+        print(os.getcwd())
+        print("Saved plot in ",OptionReport.img_temp_destination+fname+'.png')
         plt.savefig(OptionReport.img_temp_destination+fname+'.png')
         plt.close()
         
@@ -188,6 +186,8 @@ class OptionReport:
         """
         Writes the section dedicated to the volatility Sensitivity Analysis
         """
+        from option import OptionType
+        
         frate = self.option.free_rate
         std = self.default_std_for_sensitivity
         size = self.default_size_for_sensitivity
@@ -224,21 +224,12 @@ class OptionReport:
     def export(self):
         
         # First, write everything
-        report.write_intro()
-        report.write_vol_risk()
-        report.write_strike_risk()
-        report.write_free_rate_risk()
+        self.write_intro()
+        self.write_vol_risk()
+        self.write_strike_risk()
+        self.write_free_rate_risk()
         
         # Then build the document
         self.doc.build(self.elements)
         
         
-            
-        
-        
-
-op = Option()
-
-report = OptionReport("test",op)
-
-report.export()

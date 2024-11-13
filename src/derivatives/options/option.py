@@ -5,6 +5,8 @@ Date: 12 Nov 2024
 Definition of Option class
 """
 
+from options_report import OptionReport
+
 from option_pricing import *
 from enum import Enum
 
@@ -54,6 +56,7 @@ class Option:
         self.div_yield:     float       = 0.01
         self.option_type:   OptionType  = OptionType.Call
         self.option_style:  OptionStyle = OptionStyle.EU
+        self.report:        OptionReport= OptionReport("option_report",self)
         
     # Protected Setters
     
@@ -238,4 +241,5 @@ class Option:
         
             
     def write_report(self):
-        pass
+        
+        self.report.export()
