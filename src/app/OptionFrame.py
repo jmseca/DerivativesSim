@@ -34,6 +34,11 @@ class OptionFrame(tk.Frame):
     style = "option_style"
     error = "error"
     
+    # Outputs IDs
+    price_label = "price_label"
+    delta_label = "delta_label"
+    gamma_label = "gamma_label"
+    
     
     def __init__(self, root: AppRoot, geom: str, option: Option):
 
@@ -44,6 +49,7 @@ class OptionFrame(tk.Frame):
         self.root = root
         self.option = option
         self.inputs = {}
+        self.outputs = {}
         
     
     def go_back_cb(self):
@@ -102,6 +108,14 @@ class OptionFrame(tk.Frame):
             
             # If here, all values were valid
             erro_tag.place_forget()
+            
+            # Change Price + Greeks
+            price_label = self.outputs[OptionFrame.price_label]
+            price_label.config(text=f"{round(self.option.price(),2)} €")
+            delta_label = self.outputs[OptionFrame.delta_label]
+            delta_label.config(text=f"{round(self.option.delta(),2)}")
+            gamma_label = self.outputs[OptionFrame.gamma_label]
+            gamma_label.config(text=f"{round(self.option.gamma(),2)}")
                         
         except Exception as e:
             # In case of error, show it to the User
@@ -264,3 +278,38 @@ class OptionFrame(tk.Frame):
         )   
         price_button.pack(pady=100)
         price_button.place(x=100, y=600)
+        
+        
+        ######## OUTPUTS #########
+        
+        # Add Price 
+        price_tag = tk.Label(self, text="Price", font=("Arial", 26, "bold"), fg=self.fg, bg=self.bg)
+        price_tag.place(x=1000, y=150)
+        
+        price_label = tk.Label(self, text=f"{round(self.option.price(),2)} €", font=("Arial", 26, "bold"),
+            fg=self.fg, bg="light grey", anchor="e")
+        price_label.place(x=1000, y=200, width=300, height=50)
+        self.outputs[OptionFrame.price_label] = price_label
+        
+        
+        ### GREEKS ###
+        
+        # Delta
+        delta_tag = tk.Label(self, text="Delta", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
+        delta_tag.place(x=1000, y=280)
+        
+        delta_label = tk.Label(self, text=f"{round(self.option.delta(),2)}", font=("Arial", 18, "bold"),
+            fg=self.fg, bg="light grey", anchor="e")
+        delta_label.place(x=1000, y=310, width=300, height=35)
+        self.outputs[OptionFrame.delta_label] = delta_label
+        
+        # Gamma
+        gamma_tag = tk.Label(self, text="Delta", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
+        gamma_tag.place(x=1000, y=350)
+        
+        gamma_label = tk.Label(self, text=f"{round(self.option.gamma(),2)}", font=("Arial", 18, "bold"),
+            fg=self.fg, bg="light grey", anchor="e")
+        gamma_label.place(x=1000, y=380, width=300, height=35)
+        self.outputs[OptionFrame.gamma_label] = gamma_label
+        
+        

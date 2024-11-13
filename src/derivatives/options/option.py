@@ -167,6 +167,43 @@ class Option:
             return binomial_us(self.s0, self.strike, maturity_years, self.annual_vol, self.free_rate,
                 self.div_yield, call=is_call)
             
+    def delta(self) -> float:
+        """
+        Get Option Delta
+        """
+        
+        # Amount of years until maturity (ex.: 1.5 -> 1 year and a half)
+        maturity_years = self.maturity if (self.period_size is Period.Years) else self.maturity/12 
+        # Whether the option is a Call (True) or a Put (False) 
+        is_call = (self.option_type is OptionType.Call)
+        
+        if (self.option_style is OptionStyle.EU):
+            # EU
+            return eu_delta(self.s0, self.strike, self.free_rate, self.annual_vol, self.div_yield, maturity_years, is_call)
+            
+        else:
+            # US
+            return us_delta(self.s0, self.strike, self.free_rate, self.annual_vol, self.div_yield, maturity_years, is_call)
+         
+            
+    def gamma(self) -> float:
+        """
+        Get Option Gamma
+        """
+        
+        # Amount of years until maturity (ex.: 1.5 -> 1 year and a half)
+        maturity_years = self.maturity if (self.period_size is Period.Years) else self.maturity/12 
+        
+        if (self.option_style is OptionStyle.EU):
+            # EU
+            return eu_gamma(self.s0, self.strike, self.free_rate, self.annual_vol, self.div_yield, maturity_years)
+            
+        else:
+            # US
+            return us_gamma(self.s0, self.strike, self.free_rate, self.annual_vol, self.div_yield, maturity_years)
+        
+            
+            
     def to_text(self):
         style = "EU" if (self.option_style is OptionStyle.EU) else "US"
         opt_type = "Call" if (self.option_type is OptionType.Call) else "Put"
