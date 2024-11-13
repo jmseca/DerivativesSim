@@ -61,7 +61,7 @@ class Option:
         try:
             s0_nr = float(s0_str)
         except:
-            raise ValueError("Option: Underlying value must be a number")
+            raise ValueError("Option: Current Asset Price must be a number")
 
         self.s0 = round(s0_nr, 2)
         
@@ -90,7 +90,7 @@ class Option:
         if (vol_nr < 0):
             raise ValueError("Option: Volatility cant be negative")
 
-        self.annual_vol = round(vol_nr, 2)
+        self.annual_vol = round(vol_nr/100, 5)
         
     def set_free_rate(self, rate_str: str):
         try:
@@ -101,7 +101,7 @@ class Option:
         if (rate_nr < 0):
             raise ValueError("Option: Risk-Free Rate  cant be negative")
 
-        self.free_rate = round(rate_nr, 2)
+        self.free_rate = round(rate_nr/100, 5)
         
     def set_div_yiled(self, div_str: str):
         try:
@@ -112,7 +112,7 @@ class Option:
         if (div_nr < 0):
             raise ValueError("Option: Dividend Yield cant be negative")
 
-        self.div_yield = round(div_nr, 2)
+        self.div_yield = round(div_nr/100, 5)
         
     # Getters
     
@@ -166,6 +166,20 @@ class Option:
             # If US option, will use Binomial Model
             return binomial_us(self.s0, self.strike, maturity_years, self.annual_vol, self.free_rate,
                 self.div_yield, call=is_call)
+            
+    def to_text(self):
+        style = "EU" if (self.option_style is OptionStyle.EU) else "US"
+        opt_type = "Call" if (self.option_type is OptionType.Call) else "Put"
+        return f"\
+            • Current Asset Price   {self.s0} €\n\
+            • Strike Price          {self.strike} €\n\
+            • Years to Maturity     {self.get_years_to_maturity()}\n\
+            • Annual Volatility     {round(self.annual_vol*100,2)}\n\
+            • Risk-free rate        {round(self.free_rate*100,2)}\n\
+            • Dividend Yield        {round(self.div_yield*100,2)}\n\
+            • Style                 {style}\n\
+            • Type                  {opt_type}\n\
+        "
             
             
     def copy(self) :
