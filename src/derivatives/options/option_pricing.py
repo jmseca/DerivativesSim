@@ -27,31 +27,30 @@ def black_scholes(s0: float, strike: float, annual_vol: float, maturity: float, 
     == Args ==
     s0 (float):             Current value of the underlying
     strike (float):         Strike price
-    annual_vol (float):     Annual volatility (0 < annual_vol < 1)
+    annual_vol (float):     Annual volatility (0 < annual_vol)
     maturity (float):       Number of years until maturity
-    free_rate (float):      Annual risk free rate (0 < free_rate < 1)
-    div_yield (float):      Annual Dividend yield (0 < div_yield < 1)
+    free_rate (float):      Annual risk free rate (0 < free_rate)
+    div_yield (float):      Annual Dividend yield (0 < div_yield)
     call (bool):            True for Call options, False for Put options
     
     == Returns ==
     (float) Price of the option, using Black-Scholes 
     """
     
-    if (annual_vol < 0) or (annual_vol > 1):
-        raise ValueError("black_scholes: Annual Volatility must be between 0 and 1")
+    if (annual_vol < 0):
+        raise ValueError("black_scholes: Annual Volatility cant be negative")
     
-    if (div_yield < 0) or (div_yield > 1):
-        raise ValueError("black_scholes: Dividend Yield must be between 0 and 1")
+    if (div_yield < 0) :
+        raise ValueError("black_scholes: Dividend Yield cant be negative")
     
-    if (free_rate < 0) or (free_rate > 1):
-        raise ValueError("black_scholes: Risk Free Rate must be between 0 and 1")
+    if (free_rate < 0):
+        raise ValueError("black_scholes: Risk Free Rate cant be negative")
     
     # Take the underlying's dividend into account
     s0_actual = s0*((1-div_yield)**maturity)
     
     # Compute d1 and d2
-    d1 = np.log(s0_actual/(strike*np.exp(-maturity*free_rate)))/(annual_vol*(maturity**(1/2))) + \
-        (annual_vol*(maturity**(1/2)))/2
+    d1 = (np.log(s0_actual/(strike))+maturity*(free_rate+(annual_vol**2)/2))/(annual_vol*(maturity**(1/2))) 
     d2 = d1 - (annual_vol*(maturity**(1/2)))
     
     # Compute Beta + Delta
@@ -74,14 +73,15 @@ def binomial_put(s0: float, strike: float, maturity: int, period_vol: float, per
     s0 (float):             Current value of the underlying
     strike (float):         Strike price
     maturity (int):         Number of periods until maturity
-    period_vol (float):     Volatility per period (0 < annual_vol < 1)
-    peridod_rate (float):   Risk free rate per period (0 < free_rate < 1)
-    period_div (float):     Dividend yield per period (0 < div_yield < 1)
+    period_vol (float):     Volatility per period (0 < annual_vol)
+    peridod_rate (float):   Risk free rate per period (0 < free_rate)
+    period_div (float):     Dividend yield per period (0 < div_yield)
     
     == Returns ==
     (float) Price of the US Put option, using Binomial Model
     """
-    pass
+    # TODO
+    return 0
 
 
 def binomial_call(s0: float, strike: float, maturity: int, period_vol: float, period_rate: float,
@@ -96,14 +96,15 @@ def binomial_call(s0: float, strike: float, maturity: int, period_vol: float, pe
     s0 (float):             Current value of the underlying
     strike (float):         Strike price
     maturity (int):         Number of periods until maturity
-    period_vol (float):     Volatility per period (0 < annual_vol < 1)
-    peridod_rate (float):   Risk free rate per period (0 < free_rate < 1)
-    period_div (float):     Dividend yield per period (0 < div_yield < 1)
+    period_vol (float):     Volatility per period (0 < annual_vol)
+    peridod_rate (float):   Risk free rate per period (0 < free_rate)
+    period_div (float):     Dividend yield per period (0 < div_yield)
     
     == Returns ==
     (float) Price of the US Call option, using Binomial Model
     """
-    pass
+    # TODO
+    return 0
     
     
 def binomial_us(s0: float, strike: float, maturity: float, annual_vol: float, free_rate: float,
@@ -119,9 +120,9 @@ def binomial_us(s0: float, strike: float, maturity: float, annual_vol: float, fr
     s0 (float):             Current value of the underlying
     strike (float):         Strike price
     maturity (float):       Number of years until maturity
-    annual_vol (float):     Annual volatility (0 < annual_vol < 1)
-    free_rate (float):      Annual risk free rate (0 < free_rate < 1)
-    div_yield (float):      Annual Dividend yield (0 < div_yield < 1)
+    annual_vol (float):     Annual volatility (0 < annual_vol)
+    free_rate (float):      Annual risk free rate (0 < free_rate)
+    div_yield (float):      Annual Dividend yield (0 < div_yield)
     
     == Returns ==
     (float) Price of the US option, using Binomial Model

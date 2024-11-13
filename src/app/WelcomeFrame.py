@@ -55,7 +55,7 @@ class WelcomeFrame(tk.Frame):
             fg="#f0f3f5",
             width=20,
             height=2,
-            command=self.get_started_cb  # Call function to show the CR7 frame
+            command=self.get_started_cb 
         )   
         
         get_started_button.pack(pady=100)

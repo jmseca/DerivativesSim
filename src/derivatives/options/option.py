@@ -87,8 +87,8 @@ class Option:
         except:
             raise ValueError("Option: Volatility must be a number")
         
-        if (vol_nr > 1) or (vol_nr < 0):
-            raise ValueError("Option: Volatility must be between 0 and 1")
+        if (vol_nr < 0):
+            raise ValueError("Option: Volatility cant be negative")
 
         self.annual_vol = round(vol_nr, 2)
         
@@ -98,8 +98,8 @@ class Option:
         except:
             raise ValueError("Option: Risk-Free Rate must be a number")
         
-        if (rate_nr > 1) or (rate_nr < 0):
-            raise ValueError("Option: Risk-Free Rate must be between 0 and 1")
+        if (rate_nr < 0):
+            raise ValueError("Option: Risk-Free Rate  cant be negative")
 
         self.free_rate = round(rate_nr, 2)
         
@@ -109,10 +109,36 @@ class Option:
         except:
             raise ValueError("Option: Dividend Yield must be a number")
         
-        if (div_nr > 1) or (div_nr < 0):
-            raise ValueError("Option: Dividend Yield must be between 0 and 1")
+        if (div_nr < 0):
+            raise ValueError("Option: Dividend Yield cant be negative")
 
         self.div_yield = round(div_nr, 2)
+        
+    # Getters
+    
+    def get_years_to_maturity(self) -> float:
+        
+        return self.maturity if (self.period_size is Period.Years) else round(self.maturity*(1/12),2)
+    
+    
+    def get_option_type(self) -> str:
+        
+        return "Call" if (self.option_type is OptionType.Call) else "Put"
+    
+    
+    def get_option_style(self) -> str:
+        
+        return "US" if (self.option_style is OptionStyle.US) else "EU"
+    
+    def get_vol_str_perc(self) -> str:
+        return str(round(self.annual_vol*100,2))+' %'
+        
+    def get_frate_str_perc(self) -> str:
+        return str(round(self.free_rate*100,2))+' %'
+        
+    def get_div_yield_str_perc(self) -> str:
+        return str(round(self.div_yield*100,2))+' %'
+        
         
         
     def price(self) -> float:
@@ -141,6 +167,24 @@ class Option:
             return binomial_us(self.s0, self.strike, maturity_years, self.annual_vol, self.free_rate,
                 self.div_yield, call=is_call)
             
+            
+    def copy(self) :
+    
+        new_op = Option()
+        
+        new_op.s0           = self.s0
+        new_op.strike       = self.strike
+        new_op.maturity     = self.maturity
+        new_op.annual_vol   = self.annual_vol
+        new_op.period_size  = self.period_size
+        new_op.free_rate    = self.free_rate
+        new_op.div_yield    = self.div_yield
+        new_op.option_style = self.option_style
+        new_op.option_type  = self.option_type
+        
+        
+        return new_op
+        
             
     def write_report(self):
         pass

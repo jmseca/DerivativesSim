@@ -40,6 +40,7 @@ if __name__ == "__main__":
     
     from WelcomeFrame import WelcomeFrame
     from PickFrame import PickFrame
+    from OptionFrame import OptionFrame
     
     geom = "1600x800"
     
@@ -49,15 +50,18 @@ if __name__ == "__main__":
     # Init all the frames
     welcome_frame = WelcomeFrame(app, geom)
     pick_frame = PickFrame(app, geom)
+    option_frame = OptionFrame(app, geom)
     
     
     # Add all the frames to the App
     app.add_frame(WelcomeFrame.id, welcome_frame)
-    app.add_frame(PickFrame.id,pick_frame)
+    app.add_frame(PickFrame.id, pick_frame)
+    app.add_frame(OptionFrame.id, option_frame)
     
     # Build all the frames
     welcome_frame.build()
     pick_frame.build()
+    option_frame.build()
     
     # Run App
     app.show(WelcomeFrame.id)
