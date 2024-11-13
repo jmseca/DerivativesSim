@@ -145,6 +145,12 @@ class Option:
          
     def gamma(self) -> float:
         raise NotImplementedError("Not Implemented Error")
+    
+    def vega(self) -> float:
+        raise NotImplementedError("Not Implemented Error")
+    
+    def rho(self) -> float:
+        raise NotImplementedError("Not Implemented Error")
         
             
             
@@ -229,17 +235,20 @@ class VanillaOption(Option):
         """
         
         # Amount of years until maturity (ex.: 1.5 -> 1 year and a half)
-        maturity_years = self.maturity if (self.period_size is Period.Years) else self.maturity/12 
-        # Whether the option is a Call (True) or a Put (False) 
-        is_call = (self.option_type is OptionType.Call)
+        Tyears = self.get_years_to_maturity()
+    
         
         if (self.option_style is OptionStyle.EU):
             # EU
-            return eu_delta(self.s0, self.strike, self.free_rate, self.annual_vol, self.div_yield, maturity_years, is_call)
+            Tyears = self.get_years_to_maturity()
+            pheta = 1 if (self.option_type is OptionType.Call) else -1
+            d1 = (np.log(self.s0/self.strike) + Tyears*(self.free_rate - self.div_yield +(self.annual_vol**2)/2))/(self.annual_vol*(np.sqrt(Tyears))) 
+            
+            return pheta*np.exp(-self.div_yield*Tyears)*N(d1*pheta)
             
         else:
             # US
-            return us_delta(self.s0, self.strike, self.free_rate, self.annual_vol, self.div_yield, maturity_years, is_call)
+            raise NotImplementedError("Not Implemented Error")
          
             
     def gamma(self) -> float:
@@ -247,17 +256,39 @@ class VanillaOption(Option):
         Get Vanilla Option Gamma
         """
         
-        # Amount of years until maturity (ex.: 1.5 -> 1 year and a half)
-        maturity_years = self.maturity if (self.period_size is Period.Years) else self.maturity/12 
-        
         if (self.option_style is OptionStyle.EU):
             # EU
-            return eu_gamma(self.s0, self.strike, self.free_rate, self.annual_vol, self.div_yield, maturity_years)
+            Tyears = self.get_years_to_maturity()
+            d1 = (np.log(self.s0/self.strike) + Tyears*(self.free_rate - self.div_yield +(self.annual_vol**2)/2))/(self.annual_vol*(np.sqrt(Tyears))) 
             
+            return N_der(d1)*np.exp(-self.div_yield*Tyears)/(self.s0*self.annual_vol*np.sqrt(Tyears))
         else:
             # US
-            return us_gamma(self.s0, self.strike, self.free_rate, self.annual_vol, self.div_yield, maturity_years)
+            raise NotImplementedError("Not Implemented Error")
         
+    def vega(self) -> float:
+        if (self.option_style is OptionStyle.EU):
+            # EU
+            Tyears = self.get_years_to_maturity()
+            d1 = (np.log(self.s0/self.strike) + Tyears*(self.free_rate - self.div_yield +(self.annual_vol**2)/2))/(self.annual_vol*(np.sqrt(Tyears))) 
+            
+            return self.s0*np.exp(-self.div_yield*Tyears)*np.sqrt(Tyears)*N_der(d1)
+        else:
+            # US
+            raise NotImplementedError("Not Implemented Error")
+        
+        
+    def rho(self) -> float:
+        if (self.option_style is OptionStyle.EU):
+            # EU
+            Tyears = self.get_years_to_maturity()
+            pheta = 1 if (self.option_type is OptionType.Call) else -1
+            d1 = (np.log(self.s0/self.strike) + Tyears*(self.free_rate - self.div_yield +(self.annual_vol**2)/2))/(self.annual_vol*(np.sqrt(Tyears))) 
+            
+            return pheta*self.strike*np.exp(-self.free_rate*Tyears)*Tyears*N(pheta*(d1-self.annual_vol*np.sqrt(Tyears)))
+        else:
+            # US
+            raise NotImplementedError("Not Implemented Error")
             
             
     def to_text(self):
@@ -325,14 +356,18 @@ class AssetOrNothinOption(Option):
         """
         
         Tyears = self.get_years_to_maturity()
+        call = self.option_type is OptionType.Call
         
-        if (self.option_type is OptionType.Call):
-            
-            return np.exp(-Tyears * self.free_rate) * self.normal_path.tail(1).squeeze().apply(lambda x: x if x > self.strike else 0).mean()
+        # Adjust the underlying price for the dividend yield
+        s0_actual = self.s0 * np.exp(-self.div_yield * Tyears)
         
-        else:
-            
-            return np.exp(-Tyears * self.free_rate) * self.normal_path.tail(1).squeeze().apply(lambda x: x if x < self.strike else 0).mean()
+        # Compute d1
+        d1 = (np.log(self.s0/self.strike) + Tyears*(self.free_rate - self.div_yield +(self.annual_vol**2)/2))/(self.annual_vol*(np.sqrt(Tyears))) 
+        
+        # Compute Delta
+        delta = N(d1) if call else (N(d1) - 1)
+        
+        return s0_actual*delta
         
         
     def delta(self):
@@ -340,19 +375,47 @@ class AssetOrNothinOption(Option):
         Delta
         """
         Tyears = self.get_years_to_maturity()
+        pheta = 1 if (self.option_type is OptionType.Call) else -1
+        d1 = (np.log(self.s0/self.strike) + Tyears*(self.free_rate - self.div_yield +(self.annual_vol**2)/2))/(self.annual_vol*(np.sqrt(Tyears))) 
         
-        if (self.option_type is OptionType.Call):
-            call_price_normal = np.exp(-Tyears * self.free_rate) * self.normal_path.tail(1).squeeze().apply(lambda x: x if x > self.strike else 0).mean()
-            call_price_greek = np.exp(-Tyears * self.free_rate) * self.greek_path.tail(1).squeeze().apply(lambda x: x if x > self.strike else 0).mean()
-            return (call_price_greek-call_price_normal)/(self.s0*0.001)
+        return pheta*np.exp(-self.div_yield*Tyears)*N_der(d1)/(self.annual_vol*np.sqrt(Tyears)) +\
+            np.exp(-self.div_yield*Tyears)*N(pheta*d1)
         
-        else:
-            
-            put_price_normal = np.exp(-Tyears * self.free_rate) * self.normal_path.tail(1).squeeze().apply(lambda x: x if x < self.strike else 0).mean()
-            put_price_greek = np.exp(-Tyears * self.free_rate) * self.greek_path.tail(1).squeeze().apply(lambda x: x if x < self.strike else 0).mean()
-            return (put_price_greek-put_price_normal)/(self.s0*0.001)
         
         
     def gamma(self):
-        return 88
+        """
+        Gamma
+        """
+        Tyears = self.get_years_to_maturity()
+        pheta = 1 if (self.option_type is OptionType.Call) else -1
+        d1 = (np.log(self.s0/self.strike) + Tyears*(self.free_rate - self.div_yield +(self.annual_vol**2)/2))/(self.annual_vol*(np.sqrt(Tyears))) 
+        d2 = d1 - (self.annual_vol*np.sqrt(Tyears))
+        
+        return -pheta*np.exp(-self.div_yield*Tyears)/(self.s0*(self.annual_vol**2)*Tyears)*d2*N_der(d1)
+    
+    
+    def vega(self):
+        """
+        Vega
+        """
+        Tyears = self.get_years_to_maturity()
+        pheta = 1 if (self.option_type is OptionType.Call) else -1
+        d1 = (np.log(self.s0/self.strike) + Tyears*(self.free_rate - self.div_yield +(self.annual_vol**2)/2))/(self.annual_vol*(np.sqrt(Tyears))) 
+        d2 = d1 - (self.annual_vol*np.sqrt(Tyears))
+        
+        return -(pheta*self.s0*np.exp(-self.div_yield*Tyears)/self.annual_vol)*(d2*N_der(d1))
+    
+    
+    def rho(self):
+        """
+        Rho
+        """
+        Tyears = self.get_years_to_maturity()
+        pheta = 1 if (self.option_type is OptionType.Call) else -1
+        d1 = (np.log(self.s0/self.strike) + Tyears*(self.free_rate - self.div_yield +(self.annual_vol**2)/2))/(self.annual_vol*(np.sqrt(Tyears))) 
+        
+        return pheta*self.s0*np.exp(-self.div_yield*Tyears)*np.sqrt(Tyears)*N_der(d1)/self.annual_vol
+        
+        
 

@@ -39,15 +39,18 @@ class OptionFrame(tk.Frame):
     price_label = "price_label"
     delta_label = "delta_label"
     gamma_label = "gamma_label"
+    vega_label  = "vega_label"
+    rho_label = "rho_label"
     
     
-    def __init__(self, root: AppRoot, geom: str, option: Option):
+    def __init__(self, root: AppRoot, geom: str, vanilla: bool,  option: Option):
 
         self.bg = "#97c5eb"
         
         super().__init__(root, bg=self.bg)
         self.fg = "#1f3044"
         self.root = root
+        self.vanilla = vanilla
         self.option = option
         self.inputs = {}
         self.outputs = {}
@@ -62,8 +65,10 @@ class OptionFrame(tk.Frame):
         from PickFrame import PickFrame
         
         self.root.show(PickFrame.id)
-        self.root.hide(OptionFrame.id)
-    
+        if self.vanilla:
+            self.root.hide(OptionFrame.vanilla_id)
+        else:
+            self.root.hide(OptionFrame.exotic_id)
     
     def set_period_cb(self):
         """
@@ -117,6 +122,10 @@ class OptionFrame(tk.Frame):
             delta_label.config(text=f"{round(self.option.delta(),2)}")
             gamma_label = self.outputs[OptionFrame.gamma_label]
             gamma_label.config(text=f"{round(self.option.gamma(),2)}")
+            vega_label = self.outputs[OptionFrame.vega_label]
+            vega_label.config(text=f"{round(self.option.vega(),2)}")
+            rho_label = self.outputs[OptionFrame.rho_label]
+            rho_label.config(text=f"{round(self.option.rho(),2)}")
                         
         except Exception as e:
             # In case of error, show it to the User
@@ -315,6 +324,24 @@ class OptionFrame(tk.Frame):
             fg=self.fg, bg="light grey", anchor="e")
         gamma_label.place(x=1000, y=380, width=300, height=35)
         self.outputs[OptionFrame.gamma_label] = gamma_label
+        
+        # Vega
+        vega_tag = tk.Label(self, text="Vega", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
+        vega_tag.place(x=1000, y=420)
+        
+        vega_label = tk.Label(self, text=f"{round(self.option.vega(),2)}", font=("Arial", 18, "bold"),
+            fg=self.fg, bg="light grey", anchor="e")
+        vega_label.place(x=1000, y=450, width=300, height=35)
+        self.outputs[OptionFrame.vega_label] = vega_label
+        
+        # Rho
+        rho_tag = tk.Label(self, text="Rho", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
+        rho_tag.place(x=1000, y=490)
+        
+        rho_label = tk.Label(self, text=f"{round(self.option.rho(),2)}", font=("Arial", 18, "bold"),
+            fg=self.fg, bg="light grey", anchor="e")
+        rho_label.place(x=1000, y=520, width=300, height=35)
+        self.outputs[OptionFrame.rho_label] = rho_label
         
         ### END OF GREEKS ###
         

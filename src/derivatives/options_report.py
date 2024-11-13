@@ -186,7 +186,7 @@ class OptionReport:
         """
         Writes the section dedicated to the risk-free rate Sensitivity Analysis
         """
-        from option import OptionType
+        from derivatives.options import OptionType
         
         frate = self.option.free_rate
         std = self.default_std_for_sensitivity
@@ -223,7 +223,7 @@ class OptionReport:
         """
         Writes the section dedicated to the Delta Sensitivity Analysis
         """
-        from option import OptionType
+        from derivatives.options import OptionType
         
         # Todo: Add Analysis with asset price + maturity + 
         

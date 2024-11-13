@@ -56,8 +56,8 @@ if __name__ == "__main__":
     # Init all the frames
     welcome_frame = WelcomeFrame(app, geom)
     pick_frame = PickFrame(app, geom)
-    vanilla_frame = OptionFrame(app, geom, VanillaOption())
-    exotic_frame = OptionFrame(app, geom, AssetOrNothinOption())
+    vanilla_frame = OptionFrame(app, geom, True, VanillaOption())
+    exotic_frame = OptionFrame(app, geom, False, AssetOrNothinOption())
     
     
     # Add all the frames to the App
