@@ -5,10 +5,11 @@ Date: 12 Nov 2024
 Definition of Option class
 """
 
-from options_report import OptionReport
-
 from option_pricing import *
 from enum import Enum
+
+import pandas as pd
+import numpy as np
 
 class Period(Enum):
     Years = 1
@@ -39,7 +40,6 @@ class Option:
     free_rate (float)           Annual risk-free rate (0 < free_rate < 1)
     div_yield (float)           Annual dividend yield (0 < div_yield < 1)
     option_type (OptionType)    Option Type (Call/Put)
-    option_style OptionStyle)   Option Style (US/EU)
     """
     
     
@@ -55,8 +55,6 @@ class Option:
         self.free_rate:     float       = 0.03
         self.div_yield:     float       = 0.01
         self.option_type:   OptionType  = OptionType.Call
-        self.option_style:  OptionStyle = OptionStyle.EU
-        self.report:        OptionReport= OptionReport("option_report",self)
         
     # Protected Setters
     
@@ -128,11 +126,6 @@ class Option:
         
         return "Call" if (self.option_type is OptionType.Call) else "Put"
     
-    
-    def get_option_style(self) -> str:
-        
-        return "US" if (self.option_style is OptionStyle.US) else "EU"
-    
     def get_vol_str_perc(self) -> str:
         return str(round(self.annual_vol*100,2))+' %'
         
@@ -143,6 +136,66 @@ class Option:
         return str(round(self.div_yield*100,2))+' %'
         
         
+        
+    def price(self) -> float:
+        raise NotImplementedError("Not Implemented Error")
+            
+    def delta(self) -> float:
+        raise NotImplementedError("Not Implemented Error")
+         
+    def gamma(self) -> float:
+        raise NotImplementedError("Not Implemented Error")
+        
+            
+            
+    def to_text(self):
+        opt_type = "Call" if (self.option_type is OptionType.Call) else "Put"
+        return f"\
+            • Current Asset Price   {self.s0} €\n\
+            • Strike Price          {self.strike} €\n\
+            • Years to Maturity     {self.get_years_to_maturity()}\n\
+            • Annual Volatility     {round(self.annual_vol*100,2)}\n\
+            • Risk-free rate        {round(self.free_rate*100,2)}\n\
+            • Dividend Yield        {round(self.div_yield*100,2)}\n\
+            • Type                  {opt_type}\n\
+        "
+            
+            
+    def copy(self) :
+        raise NotImplementedError("Not Implemented Error")
+        
+        
+class VanillaOption(Option):
+    """
+    Option
+    
+    == Summary ==
+    Class that represents a Vanilla Option
+    
+    == Attributes ==
+    s0 (float):                 Current value of the underlying
+    strike (float):             Strike Price value     
+    maturity (int)              Periods to Maturity
+    period_size (Period)        Duration of Periods (Monthly or Yearly)
+    annual_vol (float)          Annual Volatility (0 < annual_vol < 1)
+    free_rate (float)           Annual risk-free rate (0 < free_rate < 1)
+    div_yield (float)           Annual dividend yield (0 < div_yield < 1)
+    option_type (OptionType)    Option Type (Call/Put)
+    option_style OptionStyle)   Option Style (US/EU)
+    """
+    
+    
+    def __init__(self):
+        
+        # Every new instance of an option will be init with values for all its attributes
+
+        super().__init__()
+        self.option_style:  OptionStyle = OptionStyle.EU
+        
+    def get_option_style(self) -> str:
+        
+        return "US" if (self.option_style is OptionStyle.US) else "EU"
+            
         
     def price(self) -> float:
         """
@@ -172,7 +225,7 @@ class Option:
             
     def delta(self) -> float:
         """
-        Get Option Delta
+        Get Vanilla Option Delta
         """
         
         # Amount of years until maturity (ex.: 1.5 -> 1 year and a half)
@@ -191,7 +244,7 @@ class Option:
             
     def gamma(self) -> float:
         """
-        Get Option Gamma
+        Get Vanilla Option Gamma
         """
         
         # Amount of years until maturity (ex.: 1.5 -> 1 year and a half)
@@ -209,22 +262,15 @@ class Option:
             
     def to_text(self):
         style = "EU" if (self.option_style is OptionStyle.EU) else "US"
-        opt_type = "Call" if (self.option_type is OptionType.Call) else "Put"
-        return f"\
-            • Current Asset Price   {self.s0} €\n\
-            • Strike Price          {self.strike} €\n\
-            • Years to Maturity     {self.get_years_to_maturity()}\n\
-            • Annual Volatility     {round(self.annual_vol*100,2)}\n\
-            • Risk-free rate        {round(self.free_rate*100,2)}\n\
-            • Dividend Yield        {round(self.div_yield*100,2)}\n\
-            • Style                 {style}\n\
-            • Type                  {opt_type}\n\
-        "
+        
+        option_txt = super().to_text()
+        return f"{option_txt}\
+            • Style                 {style}\n"
             
             
     def copy(self) :
-    
-        new_op = Option()
+        
+        new_op = VanillaOption()
         
         new_op.s0           = self.s0
         new_op.strike       = self.strike
@@ -236,10 +282,77 @@ class Option:
         new_op.option_style = self.option_style
         new_op.option_type  = self.option_type
         
-        
         return new_op
+    
+    
+class AssetOrNothinOption(Option):
+    """
+    - St if St >  X
+    - 0  if St <= X
+    
+    """
+    
+    def __init__(self):
         
+        # Every new instance of an option will be init with values for all its attributes
+
+        super().__init__()
+        self.nr_sims = 10_000
+        # 1 period per 2d
+        self.delta_t = 1/183    
+        
+        Tyears = self.get_years_to_maturity()
+        self.sims_df = pd.DataFrame(np.random.standard_normal(size=(int(Tyears/self.delta_t + 1), self.nr_sims)))
+        
+        # Paths used for pricing 
+        self.normal_path = self.generate_sample_path(self.s0)
+        # Paths used to compute the greeks
+        self.greek_path = self.generate_sample_path(self.s0*1.001)
+        
+    def generate_sample_path(self, price):
+        
+        "Df with all the simulated asse prices at maturity"
+    
+        sims_df_factor = (
+            (self.sims_df * self.annual_vol * np.sqrt(self.delta_t)) + (self.free_rate * self.delta_t) + 1)
+        sims_df_factor.iloc[0] = price
+        return sims_df_factor.cumprod()
+    
+    
+    def price(self):
+        """
+        Price of the AssetOrNothing Option
+        """
+        
+        Tyears = self.get_years_to_maturity()
+        
+        if (self.option_type is OptionType.Call):
             
-    def write_report(self):
+            return np.exp(-Tyears * self.free_rate) * self.normal_path.tail(1).squeeze().apply(lambda x: x if x > self.strike else 0).mean()
         
-        self.report.export()
+        else:
+            
+            return np.exp(-Tyears * self.free_rate) * self.normal_path.tail(1).squeeze().apply(lambda x: x if x < self.strike else 0).mean()
+        
+        
+    def delta(self):
+        """
+        Delta
+        """
+        Tyears = self.get_years_to_maturity()
+        
+        if (self.option_type is OptionType.Call):
+            call_price_normal = np.exp(-Tyears * self.free_rate) * self.normal_path.tail(1).squeeze().apply(lambda x: x if x > self.strike else 0).mean()
+            call_price_greek = np.exp(-Tyears * self.free_rate) * self.greek_path.tail(1).squeeze().apply(lambda x: x if x > self.strike else 0).mean()
+            return (call_price_greek-call_price_normal)/(self.s0*0.001)
+        
+        else:
+            
+            put_price_normal = np.exp(-Tyears * self.free_rate) * self.normal_path.tail(1).squeeze().apply(lambda x: x if x < self.strike else 0).mean()
+            put_price_greek = np.exp(-Tyears * self.free_rate) * self.greek_path.tail(1).squeeze().apply(lambda x: x if x < self.strike else 0).mean()
+            return (put_price_greek-put_price_normal)/(self.s0*0.001)
+        
+        
+    def gamma(self):
+        return 88
+

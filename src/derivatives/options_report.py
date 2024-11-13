@@ -152,7 +152,7 @@ class OptionReport:
         
     def write_strike_risk(self):
         """
-        Writes the section dedicated to the volatility Sensitivity Analysis
+        Writes the section dedicated to the strike price Sensitivity Analysis
         """
         strike = self.option.strike
         std = self.default_std_for_sensitivity
@@ -184,7 +184,7 @@ class OptionReport:
         
     def write_free_rate_risk(self):
         """
-        Writes the section dedicated to the volatility Sensitivity Analysis
+        Writes the section dedicated to the risk-free rate Sensitivity Analysis
         """
         from option import OptionType
         
@@ -218,6 +218,44 @@ class OptionReport:
         # Add a Page Break
         self.elements.append(PageBreak())
         
+        
+    def write_delta_sens(self):
+        """
+        Writes the section dedicated to the Delta Sensitivity Analysis
+        """
+        from option import OptionType
+        
+        # Todo: Add Analysis with asset price + maturity + 
+        
+        frate = self.option.free_rate
+        std = self.default_std_for_sensitivity
+        size = self.default_size_for_sensitivity
+        graph_fname = "frate_sens"
+        
+        x_values = list(np.linspace((1-std)*frate, (1+std)*frate, size))
+        y_values = list(map(
+            lambda new_frate : black_scholes(
+                self.option.s0,
+                self.option.strike,
+                self.option.annual_vol,
+                self.option.get_years_to_maturity(),
+                new_frate,
+                self.option.div_yield,
+                call = self.option.option_type is OptionType.Call    
+            ),
+            x_values
+        ))
+        
+        # Add the section Title
+        self.elements.append(Paragraph("Risk-free Rate Sensitivity", self.style["Heading2"]))
+        
+        # Add the Plot
+        self.save_plot(x_values, y_values, "Risk-Free Rate", "Option Price",
+            graph_fname, "Price Sensitivity with Risk-Free Rate","red")
+        self.write_plot(graph_fname)
+        
+        # Add a Page Break
+        self.elements.append(PageBreak())
         
         
         
