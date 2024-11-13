@@ -4,9 +4,9 @@ import tkinter as tk
 
 import os
 import sys
-sys.path.append("../derivatives/options/")
+sys.path.append("../derivatives/")
 
-from option import Option
+from options import Option, VanillaOption, AssetOrNothinOption
 
 
 class AppRoot(tk.Tk):
@@ -56,18 +56,21 @@ if __name__ == "__main__":
     # Init all the frames
     welcome_frame = WelcomeFrame(app, geom)
     pick_frame = PickFrame(app, geom)
-    option_frame = OptionFrame(app, geom, Option())
+    vanilla_frame = OptionFrame(app, geom, VanillaOption())
+    exotic_frame = OptionFrame(app, geom, AssetOrNothinOption())
     
     
     # Add all the frames to the App
     app.add_frame(WelcomeFrame.id, welcome_frame)
     app.add_frame(PickFrame.id, pick_frame)
-    app.add_frame(OptionFrame.id, option_frame)
+    app.add_frame(OptionFrame.vanilla_id, vanilla_frame)
+    app.add_frame(OptionFrame.exotic_id, exotic_frame)
     
     # Build all the frames
     welcome_frame.build()
     pick_frame.build()
-    option_frame.build()
+    vanilla_frame.build()
+    exotic_frame.build()
     
     # Run App
     app.show(WelcomeFrame.id)

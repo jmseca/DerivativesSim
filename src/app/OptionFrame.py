@@ -12,15 +12,16 @@ import tkinter as tk
 
 import os
 import sys
-sys.path.append("../derivatives/options/")
+sys.path.append("../derivatives/")
 
 from AppRoot import AppRoot
-from option import Option, Period, OptionType, OptionStyle
+from options import Option, Period, OptionType, OptionStyle
 
 
 class OptionFrame(tk.Frame):
     
-    id = "Option"
+    vanilla_id = "Vanilla"
+    exotic_id = "Exotic"
     
     # Inputs IDs
     s0 = "value"
@@ -71,16 +72,16 @@ class OptionFrame(tk.Frame):
         period_size = Period.Months if (self.inputs[OptionFrame.period_size].get()==1) else Period.Years
         self.option.period_size = period_size
          
-    def set_style_cb(self):
-        """
-        Sets the option style (EU/US), everytime the user changes the values
-        """
-        style = OptionStyle.US if (self.inputs[OptionFrame.style].get()==1) else OptionStyle.EU
-        self.option.option_style = style
+    #def set_style_cb(self):
+    #    """
+    #    Sets the option style (EU/US), everytime the user changes the values
+    #    """
+    #    style = OptionStyle.US if (self.inputs[OptionFrame.style].get()==1) else OptionStyle.EU
+    #    self.option.option_style = style
         
     def set_type_cb(self):
         """
-        Sets the option style (Call/Put), everytime the user changes the values
+        Sets the option type (Call/Put), everytime the user changes the values
         """
         option_type = OptionType.Call if (self.inputs[OptionFrame.option_type].get()==1) else OptionType.Put
         self.option.option_type = option_type
@@ -243,20 +244,20 @@ class OptionFrame(tk.Frame):
         type_put.place(x=input_x_offset+100, y=410)
         
         # Option Style
-        style_tag = tk.Label(self, text="Option Style", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        style_tag.place(x=0, y=440)
+        #style_tag = tk.Label(self, text="Option Style", font=("Arial", 14), fg=self.fg, bg=self.bg)
+        #style_tag.place(x=0, y=440)
         
         # Var that controls the binary choice
-        style_control_var = tk.IntVar(value=(1 if self.option.option_style is OptionStyle.US else 2))
-        self.inputs[OptionFrame.style] = style_control_var
+        #style_control_var = tk.IntVar(value=(1 if self.option.option_style is OptionStyle.US else 2))
+        #self.inputs[OptionFrame.style] = style_control_var
         
-        style_us = tk.Radiobutton(self, text="US", var=style_control_var,
-            value=1, font=("Arial", 14), fg=self.fg, bg=self.bg, command=self.set_style_cb)
-        style_us.place(x=input_x_offset, y=440)
+        #style_us = tk.Radiobutton(self, text="US", var=style_control_var,
+        #    value=1, font=("Arial", 14), fg=self.fg, bg=self.bg, command=self.set_style_cb)
+        #style_us.place(x=input_x_offset, y=440)
 
-        style_eu = tk.Radiobutton(self, text="EU", var=style_control_var, 
-            value=2, font=("Arial", 14), fg=self.fg, bg=self.bg, command=self.set_style_cb)
-        style_eu.place(x=input_x_offset+100, y=440)
+        #style_eu = tk.Radiobutton(self, text="EU", var=style_control_var, 
+        #    value=2, font=("Arial", 14), fg=self.fg, bg=self.bg, command=self.set_style_cb)
+        #style_eu.place(x=input_x_offset+100, y=440)
         
         
         
