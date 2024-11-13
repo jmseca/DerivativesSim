@@ -16,6 +16,12 @@ def N(x: float):
     """
     return norm.cdf(x)
 
+def N_der(x: float):
+    """
+    Derivative of N(x). Usefule for Greeks calculation
+    """
+    return np.exp(-(x**2)/2)/((2*np.pi)**(1/2))
+
 def black_scholes(s0: float, strike: float, annual_vol: float, maturity: float, free_rate: float,
     div_yield: float, call: bool = True) -> float:
     """
@@ -46,18 +52,18 @@ def black_scholes(s0: float, strike: float, annual_vol: float, maturity: float, 
     if (free_rate < 0):
         raise ValueError("black_scholes: Risk Free Rate cant be negative")
     
-    # Take the underlying's dividend into account
-    s0_actual = s0*((1-div_yield)**maturity)
+    # Adjust the underlying price for the dividend yield
+    s0_actual = s0 * np.exp(-div_yield * maturity)
     
     # Compute d1 and d2
-    d1 = (np.log(s0_actual/(strike))+maturity*(free_rate+(annual_vol**2)/2))/(annual_vol*(maturity**(1/2))) 
-    d2 = d1 - (annual_vol*(maturity**(1/2)))
+    d1 = (np.log(s0/strike) + maturity*(free_rate - div_yield +(annual_vol**2)/2))/(annual_vol*(np.sqrt(maturity))) 
+    d2 = d1 - (annual_vol*np.sqrt(maturity))
     
     # Compute Beta + Delta
     beta = -N(d2) if call else (1 - N(d2))
     delta = N(d1) if call else (N(d1) - 1)
     
-    return s0*delta + strike*beta #TODO: Check if this with s0 or s0_actual
+    return s0_actual*delta + strike*np.exp(-free_rate*maturity)*beta 
     
     
     
@@ -141,3 +147,70 @@ def binomial_us(s0: float, strike: float, maturity: float, annual_vol: float, fr
         return binomial_call(s0, strike, months_to_maturity, monthly_vol, monthly_rate, monthly_div)
     else:
         return binomial_put(s0, strike, months_to_maturity, monthly_vol, monthly_rate, monthly_div)
+    
+    
+
+# Greeks values could also be returned in the Models functions. This method was chosen to due to "time-to-market"
+            
+def eu_delta(s0: float, strike: float, free_rate: float, vol: float, div_yield: float, maturity: float, call: bool):
+    """
+    eu_delta
+    
+    == Summary ==
+    Computes the Delta of an EU option
+    
+    == Args ==
+    s0 (float):             Current value of the underlying
+    strike (float):         Strike price
+    free_rate (float):      Annual risk free rate (0 < free_rate)
+    vol (float):            Annual volatility (0 < annual_vol)
+    div_yield (float):      Annual Dividend yield (0 < div_yield)
+    maturity (float):       Number of years until maturity
+    call (bool):            True for Call options, False for Put options
+    
+    == Returns ==
+    (float) Delta value of the EU option
+    """
+    
+    
+    # Adjust the underlying price for the dividend yield
+    d1 = (np.log(s0/strike) + maturity*(free_rate - div_yield +(vol**2)/2))/(vol*(np.sqrt(maturity))) 
+    
+    if call:
+        return N(d1)
+    else:
+        return N(d1)-1
+    
+    
+
+def eu_gamma(s0: float, strike: float, free_rate: float, vol: float, div_yield: float, maturity: float):
+    """
+    eu_gamma
+    
+    == Summary ==
+    Computes the Gamma of an EU option
+    
+    == Args ==
+    s0 (float):             Current value of the underlying
+    strike (float):         Strike price
+    free_rate (float):      Annual risk free rate (0 < free_rate)
+    vol (float):            Annual volatility (0 < annual_vol)
+    div_yield (float):      Annual Dividend yield (0 < div_yield)
+    maturity (float):       Number of years until maturity
+    
+    == Returns ==
+    (float) Gamma value of the EU option
+    """
+    
+    # Adjust the underlying price for the dividend yield
+    d1 = (np.log(s0/strike) + maturity*(free_rate - div_yield +(vol**2)/2))/(vol*(np.sqrt(maturity)))
+    
+    return N_der(d1)/(s0*vol*np.sqrt(maturity))
+
+def us_delta(s0: float, strike: float, free_rate: float, vol: float, div_yield: float, maturity: float, call: bool): 
+    # TODO
+    return 0
+
+def us_gamma(s0: float, strike: float, free_rate: float, vol: float, div_yield: float, maturity: float):
+    # TODO
+    return 0
