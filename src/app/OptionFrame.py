@@ -76,13 +76,6 @@ class OptionFrame(tk.Frame):
         """
         period_size = Period.Months if (self.inputs[OptionFrame.period_size].get()==1) else Period.Years
         self.option.period_size = period_size
-         
-    #def set_style_cb(self):
-    #    """
-    #    Sets the option style (EU/US), everytime the user changes the values
-    #    """
-    #    style = OptionStyle.US if (self.inputs[OptionFrame.style].get()==1) else OptionStyle.EU
-    #    self.option.option_style = style
         
     def set_type_cb(self):
         """
@@ -164,8 +157,12 @@ class OptionFrame(tk.Frame):
         go_back_button.place(x=0, y=0, anchor="nw")
         
         # Add "Option" text
-        vanilla_option_txt = tk.Label(self, text="Option", font=("Arial", 36, "bold"), fg=self.fg, bg=self.bg)
-        vanilla_option_txt.place(x=0,y=100)
+        
+        
+        txt_value = "Vanilla Option" if self.vanilla else "Asset-Or-Nothing Option"
+        
+        option_txt = tk.Label(self, text=txt_value, font=("Arial", 36, "bold"), fg=self.fg, bg=self.bg)
+        option_txt.place(x=0,y=100)
         
         ########### INPUTS ###########
         

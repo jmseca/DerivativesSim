@@ -53,9 +53,11 @@ class VisualFrame(tk.Frame):
         self.fg = "#1f3044"
         self.root = root
         self.visual_type = vtype
-        self.built = -1
+        #self.built = -1
         self.slider_labels = "Volatility" if vtype is VisualType.Vol else "Maturity (yrs)" if vtype is VisualType.Mat else "Risk-free rate"
         self.scale_max = 5 if vtype is VisualType.Mat else 1
+        
+        self.plt_col = "blue" if vtype is VisualType.Vol else "green" if vtype is VisualType.Mat else "red"
         
         
         
@@ -349,9 +351,6 @@ class VisualFrame(tk.Frame):
         
     def build(self, vanilla: bool, option: Option):
         
-        if self.built == 0:
-            return
-        self.built = 0
         self.vanilla = vanilla
         self.option = option
         # Asset Price Values
@@ -390,7 +389,7 @@ class VisualFrame(tk.Frame):
             self.vanilla,
             self.option.is_call()
         )
-        price_line, = price_ax.plot(self.x_values, price_y, lw=2)
+        price_line, = price_ax.plot(self.x_values, price_y, lw=2, color=self.plt_col)
         self.lines[VisualFrame.price] = price_line
         price_ax.set_title("Option Price as function of Asset Price")
         price_ax.set_xlabel("Asset Price")
@@ -420,7 +419,7 @@ class VisualFrame(tk.Frame):
             self.vanilla,
             self.option.is_call()
         )
-        delta_line, = delta_ax.plot(self.x_values, delta_y, lw=2)
+        delta_line, = delta_ax.plot(self.x_values, delta_y, lw=2, color=self.plt_col)
         self.lines[VisualFrame.delta] = delta_line
         delta_ax.set_title("Option Delta as function of Asset Price")
         delta_ax.set_xlabel("Asset Price")
@@ -449,7 +448,7 @@ class VisualFrame(tk.Frame):
             self.vanilla,
             self.option.is_call()
         )
-        gamma_line, = gamma_ax.plot(self.x_values, gamma_y, lw=2)
+        gamma_line, = gamma_ax.plot(self.x_values, gamma_y, lw=2, color=self.plt_col)
         self.lines[VisualFrame.gamma] = gamma_line
         gamma_ax.set_title("Option Gamma as function of Asset Price")
         gamma_ax.set_xlabel("Asset Price")
@@ -479,7 +478,7 @@ class VisualFrame(tk.Frame):
             self.vanilla,
             self.option.is_call()
         )
-        vega_line, = vega_ax.plot(self.x_values, vega_y, lw=2)
+        vega_line, = vega_ax.plot(self.x_values, vega_y, lw=2, color=self.plt_col)
         self.lines[VisualFrame.vega] = vega_line
         vega_ax.set_title("Option Vega as function of Asset Price")
         vega_ax.set_xlabel("Asset Price")
@@ -509,7 +508,7 @@ class VisualFrame(tk.Frame):
             self.vanilla,
             self.option.is_call()
         )
-        rho_line, = rho_ax.plot(self.x_values, rho_y, lw=2)
+        rho_line, = rho_ax.plot(self.x_values, rho_y, lw=2, color=self.plt_col)
         self.lines[VisualFrame.rho] = rho_line
         rho_ax.set_title("Option Rho as function of Asset Price")
         rho_ax.set_xlabel("Asset Price")

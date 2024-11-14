@@ -177,7 +177,7 @@ def delta(s0: float, strike: float, annual_vol: float, Tyears: float, free_rate:
     if vanilla:
         return pheta*np.exp(-div_yield*Tyears)*N(d1*pheta)
     else:
-        pheta*np.exp(-div_yield*Tyears)*N_der(d1)/(annual_vol*np.sqrt(Tyears)) +\
+        return pheta*np.exp(-div_yield*Tyears)*N_der(d1)/(annual_vol*np.sqrt(Tyears)) +\
             np.exp(-div_yield*Tyears)*N(pheta*d1)
     
     
