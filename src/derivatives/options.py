@@ -240,7 +240,6 @@ class VanillaOption(Option):
         """
         
         # Amount of years until maturity (ex.: 1.5 -> 1 year and a half)
-        Tyears = self.get_years_to_maturity()
     
         
         if (self.option_style is OptionStyle.EU):

@@ -20,7 +20,7 @@ import numpy as np
 
 from AppRoot import AppRoot
 from options import Option, Period, OptionType, OptionStyle
-from option_pricing import black_scholes#, delta, gamma
+from option_pricing import option_price, delta, gamma, rho, vega
 
 from enum import Enum
 
@@ -41,6 +41,9 @@ class VisualFrame(tk.Frame):
     # Canvas + Lines IDs
     price = "price"
     delta = "delta"  
+    gamma = "gamma"
+    vega = "vega"
+    rho = "rho"
     
     def __init__(self, root: AppRoot, geom: str, vtype: VisualType):
 
@@ -52,7 +55,7 @@ class VisualFrame(tk.Frame):
         self.visual_type = vtype
         self.built = -1
         self.slider_labels = "Volatility" if vtype is VisualType.Vol else "Maturity (yrs)" if vtype is VisualType.Mat else "Risk-free rate"
-        
+        self.scale_max = 5 if vtype is VisualType.Mat else 1
         
         
         
@@ -85,11 +88,16 @@ class VisualFrame(tk.Frame):
         
     def go_right_cb(self):
         
+        # I only need to build the frames on the Right CB
         
         if self.visual_type is VisualType.Mat:
+            rf_frame = self.root.get_frame(VisualFrame.rf_id)
+            rf_frame.build(self.vanilla, self.option)
             self.root.show(VisualFrame.rf_id)
             self.root.hide(VisualFrame.mat_id)
         elif self.visual_type is VisualType.Vol:
+            mat_frame = self.root.get_frame(VisualFrame.mat_id)
+            mat_frame.build(self.vanilla, self.option)
             self.root.show(VisualFrame.mat_id)
             self.root.hide(VisualFrame.vol_id)
 
@@ -110,43 +118,233 @@ class VisualFrame(tk.Frame):
         
         if self.visual_type is VisualType.Mat:
             
-            y_values = black_scholes(
+            y_values = option_price(
                 self.x_values,
                 self.option.strike,
                 self.option.annual_vol,
                 val, 
                 self.option.free_rate,
                 self.option.div_yield,
+                self.vanilla,
                 self.option.is_call()
             )
             
         elif self.visual_type is VisualType.Vol:
             
-            y_values = black_scholes(
+            y_values = option_price(
                 self.x_values,
                 self.option.strike,
                 val,
                 self.option.get_years_to_maturity(), 
                 self.option.free_rate,
                 self.option.div_yield,
+                self.vanilla,
                 self.option.is_call()
             )
             
         else:
             
-            y_values = black_scholes(
+            y_values = option_price(
                 self.x_values,
                 self.option.strike,
                 self.option.annual_vol,
                 self.option.get_years_to_maturity(), 
                 val,
                 self.option.div_yield,
+                self.vanilla,
                 self.option.is_call()
             )
             
-        print(y_values)
         self.lines[VisualFrame.price].set_ydata(y_values)
         self.canvas[VisualFrame.price].draw()
+        
+        
+    def update_delta(self, val):
+        
+        val = float(val)
+        
+        if self.visual_type is VisualType.Mat:
+            
+            y_values = delta(
+                self.x_values,
+                self.option.strike,
+                self.option.annual_vol,
+                val, 
+                self.option.free_rate,
+                self.option.div_yield,
+                self.vanilla,
+                self.option.is_call()
+            )
+            
+        elif self.visual_type is VisualType.Vol:
+            
+            y_values = delta(
+                self.x_values,
+                self.option.strike,
+                val,
+                self.option.get_years_to_maturity(), 
+                self.option.free_rate,
+                self.option.div_yield,
+                self.vanilla,
+                self.option.is_call()
+            )
+            
+        else:
+            
+            y_values = delta(
+                self.x_values,
+                self.option.strike,
+                self.option.annual_vol,
+                self.option.get_years_to_maturity(), 
+                val,
+                self.option.div_yield,
+                self.vanilla,
+                self.option.is_call()
+            )
+            
+        self.lines[VisualFrame.delta].set_ydata(y_values)
+        self.canvas[VisualFrame.delta].draw()
+        
+        
+    def update_gamma(self, val):
+        
+        val = float(val)
+        
+        if self.visual_type is VisualType.Mat:
+            
+            y_values = gamma(
+                self.x_values,
+                self.option.strike,
+                self.option.annual_vol,
+                val, 
+                self.option.free_rate,
+                self.option.div_yield,
+                self.vanilla,
+                self.option.is_call()
+            )
+            
+        elif self.visual_type is VisualType.Vol:
+            
+            y_values = gamma(
+                self.x_values,
+                self.option.strike,
+                val,
+                self.option.get_years_to_maturity(), 
+                self.option.free_rate,
+                self.option.div_yield,
+                self.vanilla,
+                self.option.is_call()
+            )
+            
+        else:
+            
+            y_values = gamma(
+                self.x_values,
+                self.option.strike,
+                self.option.annual_vol,
+                self.option.get_years_to_maturity(), 
+                val,
+                self.option.div_yield,
+                self.vanilla,
+                self.option.is_call()
+            )
+            
+        self.lines[VisualFrame.gamma].set_ydata(y_values)
+        self.canvas[VisualFrame.gamma].draw()
+        
+        
+    def update_vega(self, val):
+        
+        val = float(val)
+        
+        if self.visual_type is VisualType.Mat:
+            
+            y_values = vega(
+                self.x_values,
+                self.option.strike,
+                self.option.annual_vol,
+                val, 
+                self.option.free_rate,
+                self.option.div_yield,
+                self.vanilla,
+                self.option.is_call()
+            )
+            
+        elif self.visual_type is VisualType.Vol:
+            
+            y_values = vega(
+                self.x_values,
+                self.option.strike,
+                val,
+                self.option.get_years_to_maturity(), 
+                self.option.free_rate,
+                self.option.div_yield,
+                self.vanilla,
+                self.option.is_call()
+            )
+            
+        else:
+            
+            y_values = vega(
+                self.x_values,
+                self.option.strike,
+                self.option.annual_vol,
+                self.option.get_years_to_maturity(), 
+                val,
+                self.option.div_yield,
+                self.vanilla,
+                self.option.is_call()
+            )
+            
+        self.lines[VisualFrame.vega].set_ydata(y_values)
+        self.canvas[VisualFrame.vega].draw()
+        
+        
+    def update_rho(self, val):
+        
+        val = float(val)
+        
+        if self.visual_type is VisualType.Mat:
+            
+            y_values = rho(
+                self.x_values,
+                self.option.strike,
+                self.option.annual_vol,
+                val, 
+                self.option.free_rate,
+                self.option.div_yield,
+                self.vanilla,
+                self.option.is_call()
+            )
+            
+        elif self.visual_type is VisualType.Vol:
+            
+            y_values = rho(
+                self.x_values,
+                self.option.strike,
+                val,
+                self.option.get_years_to_maturity(), 
+                self.option.free_rate,
+                self.option.div_yield,
+                self.vanilla,
+                self.option.is_call()
+            )
+            
+        else:
+            
+            y_values = rho(
+                self.x_values,
+                self.option.strike,
+                self.option.annual_vol,
+                self.option.get_years_to_maturity(), 
+                val,
+                self.option.div_yield,
+                self.vanilla,
+                self.option.is_call()
+            )
+            
+        self.lines[VisualFrame.rho].set_ydata(y_values)
+        self.canvas[VisualFrame.rho].draw()
         
         
     def build(self, vanilla: bool, option: Option):
@@ -173,223 +371,187 @@ class VisualFrame(tk.Frame):
         go_back_button.place(x=0, y=0, anchor="nw")
         
         # TODO: missing title
-        # Add "Option" text
-        #vanilla_option_txt = tk.Label(self, text="Option", font=("Arial", 36, "bold"), fg=self.fg, bg=self.bg)
-        #vanilla_option_txt.place(x=0,y=100)
+        # Title
+        title_txt = tk.Label(self, text=self.slider_labels, font=("Arial", 40, "bold", "underline"), fg=self.fg, bg=self.bg)
+        title_txt.place(x=600,y=10)
         
         ########### GRAPHS ###########
         
         # Option Price
         
-        price_fig, price_ax = plt.subplots(figsize=(5, 3))
-        price_y = black_scholes(
+        price_fig, price_ax = plt.subplots(figsize=(4, 2.5))
+        price_y = option_price(
             self.x_values,
             self.option.strike,
             self.option.annual_vol,
             self.option.get_years_to_maturity(), 
             self.option.free_rate,
             self.option.div_yield,
+            self.vanilla,
             self.option.is_call()
         )
         price_line, = price_ax.plot(self.x_values, price_y, lw=2)
         self.lines[VisualFrame.price] = price_line
+        price_ax.set_title("Option Price as function of Asset Price")
+        price_ax.set_xlabel("Asset Price")
+        price_ax.set_ylabel("Option Price")
+        price_fig.tight_layout()
         
         price_canvas = FigureCanvasTkAgg(price_fig, master=self)
-        price_canvas.get_tk_widget().place(x=10,y=100, width=500)
+        price_canvas.get_tk_widget().place(x=50,y=100, width=400)
         self.canvas[VisualFrame.price] = price_canvas
         
-        price_vol_slider = tk.Scale(self, from_=0, to=1, orient="horizontal", label=self.slider_labels, resolution=0.01, command=self.update_price)
+        price_vol_slider = tk.Scale(self, from_=0, to=self.scale_max, orient="horizontal", label=self.slider_labels, resolution=0.01, command=self.update_price)
         price_vol_slider.set(self.option.annual_vol)
-        price_vol_slider.place(x=10, y=400)
-        price_vol_slider.config(length=500)
-        
-        """
-        # Strike Price 
-        strike_tag = tk.Label(self, text="Strike Price (€)", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        strike_tag.place(x=0, y=230)
-        
-        strike_input = tk.Entry(self,justify="right")
-        strike_input.insert(0, str(self.option.strike))
-        strike_input.place(x=input_x_offset, y=230)
-        # Add it to inputs
-        self.inputs[OptionFrame.strike] = strike_input
-        
-        # Period Size
-        period_tag = tk.Label(self, text="Period Size", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        period_tag.place(x=0, y=260)
-        
-        period_control_var = tk.IntVar(value=(1 if self.option.period_size is Period.Months else 2))
-        self.inputs[OptionFrame.period_size] = period_control_var
-        
-        period_month = tk.Radiobutton(self, text="Months", var=period_control_var,
-            value=1, font=("Arial", 14), fg=self.fg, bg=self.bg, command=self.set_period_cb)
-        period_month.place(x=input_x_offset, y=260)
-
-        period_year = tk.Radiobutton(self, text="Years", var=period_control_var, 
-            value=2, font=("Arial", 14), fg=self.fg, bg=self.bg, command=self.set_period_cb)
-        period_year.place(x=input_x_offset+100, y=260)
-        
-        # Maturity 
-        maturity_tag = tk.Label(self, text="Maturity (Periods)", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        maturity_tag.place(x=0, y=290)
-        
-        maturity_input = tk.Entry(self,justify="right")
-        maturity_input.insert(0, str(self.option.maturity))
-        maturity_input.place(x=input_x_offset, y=290)
-        # Add it to inputs
-        self.inputs[OptionFrame.maturity] = maturity_input
-        
-        # Annual Volatility 
-        vol_tag = tk.Label(self, text="Annual Volatility (%)", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        vol_tag.place(x=0, y=320)
-        
-        vol_input = tk.Entry(self,justify="right")
-        vol_input.insert(0, self.option.get_vol_str_perc()[:-2]) # Remove % sign
-        vol_input.place(x=input_x_offset, y=320)
-        # Add it to inputs
-        self.inputs[OptionFrame.vol] = vol_input
-        
-        # Risk-free Rate 
-        frate_tag = tk.Label(self, text="Risk-free rate (%)", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        frate_tag.place(x=0, y=350)
-        
-        frate_input = tk.Entry(self,justify="right")
-        frate_input.insert(0, self.option.get_frate_str_perc()[:-2]) # Remove % sign
-        frate_input.place(x=input_x_offset, y=350)
-        # Add it to inputs
-        self.inputs[OptionFrame.frate] = frate_input
+        price_vol_slider.place(x=50, y=350)
+        price_vol_slider.config(length=400)
         
         
-        # Dividend Yield 
-        div_tag = tk.Label(self, text="Annual Dividend Yield (%)", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        div_tag.place(x=0, y=380)
+        # Option Delta 
         
-        div_input = tk.Entry(self,justify="right")
-        div_input.insert(0, self.option.get_div_yield_str_perc()[:-2]) # Remove % sign
-        div_input.place(x=input_x_offset, y=380)
-        # Add it to inputs
-        self.inputs[OptionFrame.div] = div_input
+        delta_fig, delta_ax = plt.subplots(figsize=(4, 2.5))
+        delta_y = delta(
+            self.x_values,
+            self.option.strike,
+            self.option.annual_vol,
+            self.option.get_years_to_maturity(), 
+            self.option.free_rate,
+            self.option.div_yield,
+            self.vanilla,
+            self.option.is_call()
+        )
+        delta_line, = delta_ax.plot(self.x_values, delta_y, lw=2)
+        self.lines[VisualFrame.delta] = delta_line
+        delta_ax.set_title("Option Delta as function of Asset Price")
+        delta_ax.set_xlabel("Asset Price")
+        delta_ax.set_ylabel("Option Delta")
+        delta_fig.tight_layout()
         
-        # Option Type
-        type_tag = tk.Label(self, text="Option Type", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        type_tag.place(x=0, y=410)
+        delta_canvas = FigureCanvasTkAgg(delta_fig, master=self)
+        delta_canvas.get_tk_widget().place(x=500,y=100, width=400)
+        self.canvas[VisualFrame.delta] = delta_canvas
         
-        type_control_var = tk.IntVar(value=(1 if self.option.option_type is OptionType.Call else 2))
-        self.inputs[OptionFrame.option_type] = type_control_var
+        delta_slider = tk.Scale(self, from_=0, to=self.scale_max, orient="horizontal", label=self.slider_labels, resolution=0.01, command=self.update_delta)
+        delta_slider.set(self.option.annual_vol)
+        delta_slider.place(x=500, y=350)
+        delta_slider.config(length=400)
         
-        type_call = tk.Radiobutton(self, text="Call", var=type_control_var,
-            value=1, font=("Arial", 14), fg=self.fg, bg=self.bg, command=self.set_type_cb)
-        type_call.place(x=input_x_offset, y=410)
-
-        type_put = tk.Radiobutton(self, text="Put", var=type_control_var, 
-            value=2, font=("Arial", 14), fg=self.fg, bg=self.bg, command=self.set_type_cb)
-        type_put.place(x=input_x_offset+100, y=410)
+        # Option Gamma 
         
-        # Option Style
-        #style_tag = tk.Label(self, text="Option Style", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        #style_tag.place(x=0, y=440)
+        gamma_fig, gamma_ax = plt.subplots(figsize=(4, 2.5))
+        gamma_y = gamma(
+            self.x_values,
+            self.option.strike,
+            self.option.annual_vol,
+            self.option.get_years_to_maturity(), 
+            self.option.free_rate,
+            self.option.div_yield,
+            self.vanilla,
+            self.option.is_call()
+        )
+        gamma_line, = gamma_ax.plot(self.x_values, gamma_y, lw=2)
+        self.lines[VisualFrame.gamma] = gamma_line
+        gamma_ax.set_title("Option Gamma as function of Asset Price")
+        gamma_ax.set_xlabel("Asset Price")
+        gamma_ax.set_ylabel("Option Gamma")
+        gamma_fig.tight_layout()
         
-        # Var that controls the binary choice
-        #style_control_var = tk.IntVar(value=(1 if self.option.option_style is OptionStyle.US else 2))
-        #self.inputs[OptionFrame.style] = style_control_var
+        gamma_canvas = FigureCanvasTkAgg(gamma_fig, master=self)
+        gamma_canvas.get_tk_widget().place(x=950,y=100, width=400)
+        self.canvas[VisualFrame.gamma] = gamma_canvas
         
-        #style_us = tk.Radiobutton(self, text="US", var=style_control_var,
-        #    value=1, font=("Arial", 14), fg=self.fg, bg=self.bg, command=self.set_style_cb)
-        #style_us.place(x=input_x_offset, y=440)
-
-        #style_eu = tk.Radiobutton(self, text="EU", var=style_control_var, 
-        #    value=2, font=("Arial", 14), fg=self.fg, bg=self.bg, command=self.set_style_cb)
-        #style_eu.place(x=input_x_offset+100, y=440)
+        gamma_slider = tk.Scale(self, from_=0, to=self.scale_max, orient="horizontal", label=self.slider_labels, resolution=0.01, command=self.update_gamma)
+        gamma_slider.set(self.option.annual_vol)
+        gamma_slider.place(x=950, y=350)
+        gamma_slider.config(length=400)
         
         
+        # Option Vega 
         
-        ###### END OF INPUTS #######
+        vega_fig, vega_ax = plt.subplots(figsize=(4, 2.5))
+        vega_y = vega(
+            self.x_values,
+            self.option.strike,
+            self.option.annual_vol,
+            self.option.get_years_to_maturity(), 
+            self.option.free_rate,
+            self.option.div_yield,
+            self.vanilla,
+            self.option.is_call()
+        )
+        vega_line, = vega_ax.plot(self.x_values, vega_y, lw=2)
+        self.lines[VisualFrame.vega] = vega_line
+        vega_ax.set_title("Option Vega as function of Asset Price")
+        vega_ax.set_xlabel("Asset Price")
+        vega_ax.set_ylabel("Option Vega")
+        vega_fig.tight_layout()
         
-        # Error Label
+        vega_canvas = FigureCanvasTkAgg(vega_fig, master=self)
+        vega_canvas.get_tk_widget().place(x=50,y=450, width=400)
+        self.canvas[VisualFrame.vega] = vega_canvas
         
-        error_tag = tk.Label(self, text="Option Style", font=("Arial", 14, "bold"), fg="red", bg=self.bg)
-        self.inputs[OptionFrame.error] = error_tag
+        vega_slider = tk.Scale(self, from_=0, to=self.scale_max, orient="horizontal", label=self.slider_labels, resolution=0.01, command=self.update_vega)
+        vega_slider.set(self.option.annual_vol)
+        vega_slider.place(x=50, y=700)
+        vega_slider.config(length=400)
         
-        # Price It Button
         
-        price_button = tk.Button(
+    # Option Rho 
+        
+        rho_fig, rho_ax = plt.subplots(figsize=(4, 2.5))
+        rho_y = rho(
+            self.x_values,
+            self.option.strike,
+            self.option.annual_vol,
+            self.option.get_years_to_maturity(), 
+            self.option.free_rate,
+            self.option.div_yield,
+            self.vanilla,
+            self.option.is_call()
+        )
+        rho_line, = rho_ax.plot(self.x_values, rho_y, lw=2)
+        self.lines[VisualFrame.rho] = rho_line
+        rho_ax.set_title("Option Rho as function of Asset Price")
+        rho_ax.set_xlabel("Asset Price")
+        rho_ax.set_ylabel("Option Rho")
+        rho_fig.tight_layout()
+        
+        rho_canvas = FigureCanvasTkAgg(rho_fig, master=self)
+        rho_canvas.get_tk_widget().place(x=500,y=450, width=400)
+        self.canvas[VisualFrame.rho] = rho_canvas
+        
+        rho_slider = tk.Scale(self, from_=0, to=self.scale_max, orient="horizontal", label=self.slider_labels, resolution=0.01, command=self.update_rho)
+        rho_slider.set(self.option.annual_vol)
+        rho_slider.place(x=500  , y=700)
+        rho_slider.config(length=400)
+        
+        
+        ### END OF GRAPHS ###
+        
+        # Add Go Right Button
+        go_right_button = tk.Button(
             self,
-            text="Price it",
-            font=("Arial", 24, "bold"),
-            bg="#1f3044",
-            fg="#f0f3f5",
-            width=20,
-            height=2,
-            command=self.price_it_cb 
-        )   
-        price_button.pack(pady=100)
-        price_button.place(x=100, y=600)
-        
-        
-        ######## OUTPUTS #########
-        
-        # Add Price 
-        price_tag = tk.Label(self, text="Price", font=("Arial", 26, "bold"), fg=self.fg, bg=self.bg)
-        price_tag.place(x=1000, y=150)
-        
-        price_label = tk.Label(self, text=f"{round(self.option.price(),2)} €", font=("Arial", 26, "bold"),
-            fg=self.fg, bg="light grey", anchor="e")
-        price_label.place(x=1000, y=200, width=300, height=50)
-        self.outputs[OptionFrame.price_label] = price_label
-        
-        
-        ### GREEKS ###
-        
-        # Delta
-        delta_tag = tk.Label(self, text="Delta", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
-        delta_tag.place(x=1000, y=280)
-        
-        delta_label = tk.Label(self, text=f"{round(self.option.delta(),2)}", font=("Arial", 18, "bold"),
-            fg=self.fg, bg="light grey", anchor="e")
-        delta_label.place(x=1000, y=310, width=300, height=35)
-        self.outputs[OptionFrame.delta_label] = delta_label
-        
-        # Gamma
-        gamma_tag = tk.Label(self, text="Gamma", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
-        gamma_tag.place(x=1000, y=350)
-        
-        gamma_label = tk.Label(self, text=f"{round(self.option.gamma(),2)}", font=("Arial", 18, "bold"),
-            fg=self.fg, bg="light grey", anchor="e")
-        gamma_label.place(x=1000, y=380, width=300, height=35)
-        self.outputs[OptionFrame.gamma_label] = gamma_label
-        
-        # Vega
-        vega_tag = tk.Label(self, text="Vega", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
-        vega_tag.place(x=1000, y=420)
-        
-        vega_label = tk.Label(self, text=f"{round(self.option.vega(),2)}", font=("Arial", 18, "bold"),
-            fg=self.fg, bg="light grey", anchor="e")
-        vega_label.place(x=1000, y=450, width=300, height=35)
-        self.outputs[OptionFrame.vega_label] = vega_label
-        
-        # Rho
-        rho_tag = tk.Label(self, text="Rho", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
-        rho_tag.place(x=1000, y=490)
-        
-        rho_label = tk.Label(self, text=f"{round(self.option.rho(),2)}", font=("Arial", 18, "bold"),
-            fg=self.fg, bg="light grey", anchor="e")
-        rho_label.place(x=1000, y=520, width=300, height=35)
-        self.outputs[OptionFrame.rho_label] = rho_label
-        
-        ### END OF GREEKS ###
-        
-        # Export Report Button
-        export_button = tk.Button(
-            self,
-            text="Export\nSensitivity Report",
-            font=("Arial", 24, "bold"),
-            bg="#f0f3f5",
+            text=">",
+            font=("Arial", 24),
+            bg="light grey",
             fg="#1f3044",
-            width=20,
-            height=2,
-            command=self.export_report_cb 
+            command=self.go_right_cb 
         )   
-        export_button.pack(pady=100)
-        export_button.place(x=1000, y=600)
-        """
         
+        
+        if not(self.visual_type is VisualType.Rf):
+            go_right_button.place(x=1550,y=750,width=50,height=50)
+        
+        # Add Go Left Button
+        go_left_button = tk.Button(
+            self,
+            text="<",
+            font=("Arial", 24),
+            bg="light grey",
+            fg="#1f3044",
+            command=self.go_left_cb 
+        )   
+        
+        
+        if not(self.visual_type is VisualType.Vol):
+            go_left_button.place(x=1500,y=750,width=50,height=50)

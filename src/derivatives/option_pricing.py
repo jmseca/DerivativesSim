@@ -148,6 +148,75 @@ def binomial_us(s0: float, strike: float, maturity: float, annual_vol: float, fr
     else:
         return binomial_put(s0, strike, months_to_maturity, monthly_vol, monthly_rate, monthly_div)
     
+   
+   
+def option_price(s0: float, strike: float, annual_vol: float, Tyears: float, free_rate: float,
+    div_yield: float, vanilla: bool, call: bool = True):
+    
+    if vanilla:
+        return black_scholes(s0, strike, annual_vol, Tyears, free_rate, div_yield, call)
+    else:
+        s0_actual = s0 * np.exp(-div_yield * Tyears)
+        
+        # Compute d1
+        d1 = (np.log(s0/strike) + Tyears*(free_rate - div_yield +(annual_vol**2)/2))/(annual_vol*(np.sqrt(Tyears))) 
+        
+        # Compute Delta
+        delta = N(d1) if call else (N(d1) - 1)
+        
+        return s0_actual*delta
+        
+    
+def delta(s0: float, strike: float, annual_vol: float, Tyears: float, free_rate: float,
+    div_yield: float, vanilla: bool, call: bool = True):
+    
+    pheta = 1 if call else -1
+    d1 = (np.log(s0/strike) + Tyears*(free_rate - div_yield +(annual_vol**2)/2))/(annual_vol*(np.sqrt(Tyears))) 
+            
+    
+    if vanilla:
+        return pheta*np.exp(-div_yield*Tyears)*N(d1*pheta)
+    else:
+        pheta*np.exp(-div_yield*Tyears)*N_der(d1)/(annual_vol*np.sqrt(Tyears)) +\
+            np.exp(-div_yield*Tyears)*N(pheta*d1)
     
     
+def gamma(s0: float, strike: float, annual_vol: float, Tyears: float, free_rate: float,
+    div_yield: float, vanilla: bool, call: bool = True):
+    
+    pheta = 1 if call else -1
+    d1 = (np.log(s0/strike) + Tyears*(free_rate - div_yield +(annual_vol**2)/2))/(annual_vol*(np.sqrt(Tyears))) 
+    d2 = d1 - (annual_vol*np.sqrt(Tyears))
+    
+    if vanilla:
+        return N_der(d1)*np.exp(-div_yield*Tyears)/(s0*annual_vol*np.sqrt(Tyears))
+    else:
+        return -pheta*np.exp(-div_yield*Tyears)/(s0*(annual_vol**2)*Tyears)*d2*N_der(d1)
+        
+    
+def vega(s0: float, strike: float, annual_vol: float, Tyears: float, free_rate: float,
+    div_yield: float, vanilla: bool, call: bool = True):
+    
+    pheta = 1 if call else -1
+    d1 = (np.log(s0/strike) + Tyears*(free_rate - div_yield +(annual_vol**2)/2))/(annual_vol*(np.sqrt(Tyears))) 
+    d2 = d1 - (annual_vol*np.sqrt(Tyears))
+    
+    if vanilla:
+        return s0*np.exp(-div_yield*Tyears)*np.sqrt(Tyears)*N_der(d1)
+    else:
+        return -(pheta*s0*np.exp(-div_yield*Tyears)/annual_vol)*(d2*N_der(d1))
+    
+    
+def rho(s0: float, strike: float, annual_vol: float, Tyears: float, free_rate: float,
+    div_yield: float, vanilla: bool, call: bool = True):
+    
+    pheta = 1 if call else -1
+    d1 = (np.log(s0/strike) + Tyears*(free_rate - div_yield +(annual_vol**2)/2))/(annual_vol*(np.sqrt(Tyears))) 
+    d2 = d1 - (annual_vol*np.sqrt(Tyears))
+    
+    if vanilla:
+        return pheta*strike*np.exp(-free_rate*Tyears)*Tyears*N(pheta*(d1-annual_vol*np.sqrt(Tyears)))
+    else:
+        return pheta*s0*np.exp(-div_yield*Tyears)*np.sqrt(Tyears)*N_der(d1)/annual_vol
+        
     
