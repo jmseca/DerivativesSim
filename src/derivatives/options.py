@@ -56,6 +56,11 @@ class Option:
         self.div_yield:     float       = 0.01
         self.option_type:   OptionType  = OptionType.Call
         
+        
+    def is_call(self):
+        
+        return self.option_type is OptionType.Call
+            
     # Protected Setters
     
     def set_s0(self, s0_str: str): 

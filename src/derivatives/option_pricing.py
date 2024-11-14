@@ -149,3 +149,5 @@ def binomial_us(s0: float, strike: float, maturity: float, annual_vol: float, fr
         return binomial_put(s0, strike, months_to_maturity, monthly_vol, monthly_rate, monthly_div)
     
     
+    
+    

@@ -167,4 +167,5 @@ cython_debug/
 media/temp/*
 reports/*
 
+src/app/Bomb.py
 TODO.md

@@ -14,46 +14,50 @@ import os
 import sys
 sys.path.append("../derivatives/")
 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
+import numpy as np
+
 from AppRoot import AppRoot
 from options import Option, Period, OptionType, OptionStyle
+from option_pricing import black_scholes#, delta, gamma
+
+from enum import Enum
+
+class VisualType(Enum):
+    
+    Vol = 1,
+    Mat = 2
+    Rf = 3,
+    
 
 
-class OptionFrame(tk.Frame):
+class VisualFrame(tk.Frame):
     
-    vanilla_id = "Vanilla"
-    exotic_id = "Exotic"
+    vol_id = "volatility"
+    mat_id = "maturity"
+    rf_id = "riskfree"  
     
-    # Inputs IDs
-    s0 = "value"
-    strike = "strike"
-    period_size = "period_size"
-    maturity = "maturity"
-    vol = "volatility"
-    frate = "free rate"
-    div = "dividend yield"
-    option_type = "option_type"
-    style = "option_style"
-    error = "error"
+    # Canvas + Lines IDs
+    price = "price"
+    delta = "delta"  
     
-    # Outputs IDs
-    price_label = "price_label"
-    delta_label = "delta_label"
-    gamma_label = "gamma_label"
-    vega_label  = "vega_label"
-    rho_label = "rho_label"
-    
-    
-    def __init__(self, root: AppRoot, geom: str, vanilla: bool,  option: Option):
+    def __init__(self, root: AppRoot, geom: str, vtype: VisualType):
 
         self.bg = "#97c5eb"
         
         super().__init__(root, bg=self.bg)
         self.fg = "#1f3044"
         self.root = root
-        self.vanilla = vanilla
-        self.option = option
-        self.inputs = {}
-        self.outputs = {}
+        self.visual_type = vtype
+        self.built = -1
+        self.slider_labels = "Volatility" if vtype is VisualType.Vol else "Maturity (yrs)" if vtype is VisualType.Mat else "Risk-free rate"
+        
+        
+        
+        
+        self.canvas = {}
+        self.lines = {}
         
     
     def go_back_cb(self):
@@ -62,93 +66,98 @@ class OptionFrame(tk.Frame):
         
         It will hide OptionFrame and show PickFrame
         """
-        from PickFrame import PickFrame
+        from OptionFrame import OptionFrame
         
-        self.root.show(PickFrame.id)
         if self.vanilla:
-            self.root.hide(OptionFrame.vanilla_id)
+            self.root.show(OptionFrame.vanilla_id)
         else:
-            self.root.hide(OptionFrame.exotic_id)
-    
-    def set_period_cb(self):
-        """
-        Sets the option period_size, everytime the user changes the values
-        """
-        period_size = Period.Months if (self.inputs[OptionFrame.period_size].get()==1) else Period.Years
-        self.option.period_size = period_size
-         
-    #def set_style_cb(self):
-    #    """
-    #    Sets the option style (EU/US), everytime the user changes the values
-    #    """
-    #    style = OptionStyle.US if (self.inputs[OptionFrame.style].get()==1) else OptionStyle.EU
-    #    self.option.option_style = style
-        
-    def set_type_cb(self):
-        """
-        Sets the option type (Call/Put), everytime the user changes the values
-        """
-        option_type = OptionType.Call if (self.inputs[OptionFrame.option_type].get()==1) else OptionType.Put
-        self.option.option_type = option_type
-   
-    def price_it_cb(self):
-        
-        # Get User Inputs
-        usr_s0 = self.inputs[OptionFrame.s0].get()
-        usr_strike = self.inputs[OptionFrame.strike].get()
-        usr_maturity = self.inputs[OptionFrame.maturity].get()
-        usr_vol = self.inputs[OptionFrame.vol].get()
-        usr_div = self.inputs[OptionFrame.div].get()
-        usr_frate = self.inputs[OptionFrame.frate].get()
-        
-        # Period_Size, Type, and Style are automatically set
-        # Try to change option values
-        erro_tag = self.inputs[OptionFrame.error]
-        try:
-            self.option.set_s0(usr_s0)
-            self.option.set_strike(usr_strike)
-            self.option.set_maturity(usr_maturity)
-            self.option.set_volatility(usr_vol)
-            self.option.set_free_rate(usr_frate)
-            self.option.set_div_yiled(usr_div)
+            self.root.show(OptionFrame.exotic_id)
             
-            # If here, all values were valid
-            erro_tag.place_forget()
             
-            # Change Price + Greeks
-            price_label = self.outputs[OptionFrame.price_label]
-            price_label.config(text=f"{round(self.option.price(),2)} €")
-            delta_label = self.outputs[OptionFrame.delta_label]
-            delta_label.config(text=f"{round(self.option.delta(),2)}")
-            gamma_label = self.outputs[OptionFrame.gamma_label]
-            gamma_label.config(text=f"{round(self.option.gamma(),2)}")
-            vega_label = self.outputs[OptionFrame.vega_label]
-            vega_label.config(text=f"{round(self.option.vega(),2)}")
-            rho_label = self.outputs[OptionFrame.rho_label]
-            rho_label.config(text=f"{round(self.option.rho(),2)}")
-                        
-        except Exception as e:
-            # In case of error, show it to the User
-            erro_tag.config(text=str(e))
-            erro_tag.place(x=0, y=470)
+        if self.visual_type is VisualType.Mat:
+            self.root.hide(VisualFrame.mat_id)
+        elif self.visual_type is VisualType.Vol:
+            self.root.hide(VisualFrame.vol_id)
+        else:
+            self.root.hide(VisualFrame.rf_id)
+            
+        
+        
+    def go_right_cb(self):
+        
+        
+        if self.visual_type is VisualType.Mat:
+            self.root.show(VisualFrame.rf_id)
+            self.root.hide(VisualFrame.mat_id)
+        elif self.visual_type is VisualType.Vol:
+            self.root.show(VisualFrame.mat_id)
+            self.root.hide(VisualFrame.vol_id)
 
-            
-            
-    def visualise_cb(self):
+        
+    def go_left_cb(self):
     
-        from VisualFrame import VisualFrame
+        if self.visual_type is VisualType.Mat:
+            self.root.show(VisualFrame.vol_id)
+            self.root.hide(VisualFrame.mat_id)
+        elif self.visual_type is VisualType.Rf:
+            self.root.show(VisualFrame.mat_id)
+            self.root.hide(VisualFrame.rf_id)
+            
+            
+    def update_price(self, val):
         
-        vol_frame = self.root.get_frame(VisualFrame.vol_id)
-        vol_frame.build(self.vanilla, self.option)
+        val = float(val)
         
-        self.root.show(VisualFrame.vol_id)
-        if self.vanilla:
-            self.root.hide(OptionFrame.vanilla_id)
+        if self.visual_type is VisualType.Mat:
+            
+            y_values = black_scholes(
+                self.x_values,
+                self.option.strike,
+                self.option.annual_vol,
+                val, 
+                self.option.free_rate,
+                self.option.div_yield,
+                self.option.is_call()
+            )
+            
+        elif self.visual_type is VisualType.Vol:
+            
+            y_values = black_scholes(
+                self.x_values,
+                self.option.strike,
+                val,
+                self.option.get_years_to_maturity(), 
+                self.option.free_rate,
+                self.option.div_yield,
+                self.option.is_call()
+            )
+            
         else:
-            self.root.hide(OptionFrame.exotic_id)
+            
+            y_values = black_scholes(
+                self.x_values,
+                self.option.strike,
+                self.option.annual_vol,
+                self.option.get_years_to_maturity(), 
+                val,
+                self.option.div_yield,
+                self.option.is_call()
+            )
+            
+        print(y_values)
+        self.lines[VisualFrame.price].set_ydata(y_values)
+        self.canvas[VisualFrame.price].draw()
         
         
-    def build(self):
+    def build(self, vanilla: bool, option: Option):
+        
+        if self.built == 0:
+            return
+        self.built = 0
+        self.vanilla = vanilla
+        self.option = option
+        # Asset Price Values
+        self.x_values = np.linspace(0.01,option.s0*2,50)
         
         # Add "Go Back" button
         go_back_button = tk.Button(
@@ -163,24 +172,38 @@ class OptionFrame(tk.Frame):
         go_back_button.pack(pady=100)
         go_back_button.place(x=0, y=0, anchor="nw")
         
+        # TODO: missing title
         # Add "Option" text
-        vanilla_option_txt = tk.Label(self, text="Option", font=("Arial", 36, "bold"), fg=self.fg, bg=self.bg)
-        vanilla_option_txt.place(x=0,y=100)
+        #vanilla_option_txt = tk.Label(self, text="Option", font=("Arial", 36, "bold"), fg=self.fg, bg=self.bg)
+        #vanilla_option_txt.place(x=0,y=100)
         
-        ########### INPUTS ###########
+        ########### GRAPHS ###########
         
-        input_x_offset = 250
+        # Option Price
         
-        # S0 
-        s0_tag = tk.Label(self, text="Current Asset Price (€)", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        s0_tag.place(x=0, y=200)
+        price_fig, price_ax = plt.subplots(figsize=(5, 3))
+        price_y = black_scholes(
+            self.x_values,
+            self.option.strike,
+            self.option.annual_vol,
+            self.option.get_years_to_maturity(), 
+            self.option.free_rate,
+            self.option.div_yield,
+            self.option.is_call()
+        )
+        price_line, = price_ax.plot(self.x_values, price_y, lw=2)
+        self.lines[VisualFrame.price] = price_line
         
-        s0_input = tk.Entry(self,justify="right")
-        s0_input.insert(0, str(self.option.s0))
-        s0_input.place(x=input_x_offset, y=200)
-        # Add it to inputs
-        self.inputs[OptionFrame.s0] = s0_input
+        price_canvas = FigureCanvasTkAgg(price_fig, master=self)
+        price_canvas.get_tk_widget().place(x=10,y=100, width=500)
+        self.canvas[VisualFrame.price] = price_canvas
         
+        price_vol_slider = tk.Scale(self, from_=0, to=1, orient="horizontal", label=self.slider_labels, resolution=0.01, command=self.update_price)
+        price_vol_slider.set(self.option.annual_vol)
+        price_vol_slider.place(x=10, y=400)
+        price_vol_slider.config(length=500)
+        
+        """
         # Strike Price 
         strike_tag = tk.Label(self, text="Strike Price (€)", font=("Arial", 14), fg=self.fg, bg=self.bg)
         strike_tag.place(x=0, y=230)
@@ -356,17 +379,17 @@ class OptionFrame(tk.Frame):
         ### END OF GREEKS ###
         
         # Export Report Button
-        visualize_button = tk.Button(
+        export_button = tk.Button(
             self,
-            text="Visualise Risk",
+            text="Export\nSensitivity Report",
             font=("Arial", 24, "bold"),
             bg="#f0f3f5",
             fg="#1f3044",
             width=20,
             height=2,
-            command=self.visualise_cb 
+            command=self.export_report_cb 
         )   
-        visualize_button.pack(pady=100)
-        visualize_button.place(x=1000, y=600)
-        
+        export_button.pack(pady=100)
+        export_button.place(x=1000, y=600)
+        """
         

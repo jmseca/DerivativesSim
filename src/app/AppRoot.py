@@ -24,6 +24,9 @@ class AppRoot(tk.Tk):
         
         if id not in self.frames:
             self.frames[id] = frame
+            
+    def get_frame(self, id: str):
+        return self.frames[id]
         
         
     def show(self, frame_id: str):
@@ -47,6 +50,7 @@ if __name__ == "__main__":
     from WelcomeFrame import WelcomeFrame
     from PickFrame import PickFrame
     from OptionFrame import OptionFrame
+    from VisualFrame import VisualFrame, VisualType
     
     geom = "1600x800"
     
@@ -59,12 +63,20 @@ if __name__ == "__main__":
     vanilla_frame = OptionFrame(app, geom, True, VanillaOption())
     exotic_frame = OptionFrame(app, geom, False, AssetOrNothinOption())
     
+    vol_frame = VisualFrame(app, geom, VisualType.Vol)
+    mat_frame = VisualFrame(app, geom, VisualType.Mat)
+    rf_frame = VisualFrame(app, geom, VisualType.Rf)
+    
     
     # Add all the frames to the App
     app.add_frame(WelcomeFrame.id, welcome_frame)
     app.add_frame(PickFrame.id, pick_frame)
     app.add_frame(OptionFrame.vanilla_id, vanilla_frame)
     app.add_frame(OptionFrame.exotic_id, exotic_frame)
+    app.add_frame(VisualFrame.vol_id, vol_frame)
+    app.add_frame(VisualFrame.mat_id, mat_frame)
+    app.add_frame(VisualFrame.rf_id, rf_frame)
+    
     
     # Build all the frames
     welcome_frame.build()
