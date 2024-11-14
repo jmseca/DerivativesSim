@@ -24,5 +24,7 @@ sudo apt install python3-tk
 ## Run Application
 
 ```
-python src/app/AppRoot.py
+cd src/app/
+python AppRoot.py
 ```
+

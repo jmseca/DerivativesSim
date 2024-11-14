@@ -368,10 +368,9 @@ class AssetOrNothinOption(Option):
         # Compute d1
         d1 = (np.log(self.s0/self.strike) + Tyears*(self.free_rate - self.div_yield +(self.annual_vol**2)/2))/(self.annual_vol*(np.sqrt(Tyears))) 
         
-        # Compute Delta
-        delta = N(d1) if call else (N(d1) - 1)
+        pheta = 1 if call else -1
         
-        return s0_actual*delta
+        return s0_actual*N(pheta*d1)
         
         
     def delta(self):

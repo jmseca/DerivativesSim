@@ -55,6 +55,8 @@ class OptionFrame(tk.Frame):
         self.inputs = {}
         self.outputs = {}
         
+        self.greeks_round = 3
+        
     
     def go_back_cb(self):
         """
@@ -112,18 +114,18 @@ class OptionFrame(tk.Frame):
             price_label = self.outputs[OptionFrame.price_label]
             price_label.config(text=f"{round(self.option.price(),2)} €")
             delta_label = self.outputs[OptionFrame.delta_label]
-            delta_label.config(text=f"{round(self.option.delta(),2)}")
+            delta_label.config(text=f"{round(self.option.delta(),self.greeks_round)}")
             gamma_label = self.outputs[OptionFrame.gamma_label]
-            gamma_label.config(text=f"{round(self.option.gamma(),2)}")
+            gamma_label.config(text=f"{round(self.option.gamma(),self.greeks_round)}")
             vega_label = self.outputs[OptionFrame.vega_label]
-            vega_label.config(text=f"{round(self.option.vega(),2)}")
+            vega_label.config(text=f"{round(self.option.vega(),self.greeks_round)}")
             rho_label = self.outputs[OptionFrame.rho_label]
-            rho_label.config(text=f"{round(self.option.rho(),2)}")
+            rho_label.config(text=f"{round(self.option.rho(),self.greeks_round)}")
                         
         except Exception as e:
             # In case of error, show it to the User
             erro_tag.config(text=str(e))
-            erro_tag.place(x=0, y=470)
+            erro_tag.place(x=50, y=470)
 
             
             
@@ -166,11 +168,11 @@ class OptionFrame(tk.Frame):
         
         ########### INPUTS ###########
         
-        input_x_offset = 250
+        input_x_offset = 300
         
         # S0 
         s0_tag = tk.Label(self, text="Current Asset Price (€)", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        s0_tag.place(x=0, y=200)
+        s0_tag.place(x=50, y=200)
         
         s0_input = tk.Entry(self,justify="right")
         s0_input.insert(0, str(self.option.s0))
@@ -180,7 +182,7 @@ class OptionFrame(tk.Frame):
         
         # Strike Price 
         strike_tag = tk.Label(self, text="Strike Price (€)", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        strike_tag.place(x=0, y=230)
+        strike_tag.place(x=50, y=230)
         
         strike_input = tk.Entry(self,justify="right")
         strike_input.insert(0, str(self.option.strike))
@@ -190,7 +192,7 @@ class OptionFrame(tk.Frame):
         
         # Period Size
         period_tag = tk.Label(self, text="Period Size", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        period_tag.place(x=0, y=260)
+        period_tag.place(x=50, y=260)
         
         period_control_var = tk.IntVar(value=(1 if self.option.period_size is Period.Months else 2))
         self.inputs[OptionFrame.period_size] = period_control_var
@@ -205,7 +207,7 @@ class OptionFrame(tk.Frame):
         
         # Maturity 
         maturity_tag = tk.Label(self, text="Maturity (Periods)", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        maturity_tag.place(x=0, y=290)
+        maturity_tag.place(x=50, y=290)
         
         maturity_input = tk.Entry(self,justify="right")
         maturity_input.insert(0, str(self.option.maturity))
@@ -215,7 +217,7 @@ class OptionFrame(tk.Frame):
         
         # Annual Volatility 
         vol_tag = tk.Label(self, text="Annual Volatility (%)", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        vol_tag.place(x=0, y=320)
+        vol_tag.place(x=50, y=320)
         
         vol_input = tk.Entry(self,justify="right")
         vol_input.insert(0, self.option.get_vol_str_perc()[:-2]) # Remove % sign
@@ -225,10 +227,10 @@ class OptionFrame(tk.Frame):
         
         # Risk-free Rate 
         frate_tag = tk.Label(self, text="Risk-free rate (%)", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        frate_tag.place(x=0, y=350)
+        frate_tag.place(x=50, y=350)
         
         frate_input = tk.Entry(self,justify="right")
-        frate_input.insert(0, self.option.get_frate_str_perc()[:-2]) # Remove % sign
+        frate_input.insert(50, self.option.get_frate_str_perc()[:-2]) # Remove % sign
         frate_input.place(x=input_x_offset, y=350)
         # Add it to inputs
         self.inputs[OptionFrame.frate] = frate_input
@@ -236,7 +238,7 @@ class OptionFrame(tk.Frame):
         
         # Dividend Yield 
         div_tag = tk.Label(self, text="Annual Dividend Yield (%)", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        div_tag.place(x=0, y=380)
+        div_tag.place(x=50, y=380)
         
         div_input = tk.Entry(self,justify="right")
         div_input.insert(0, self.option.get_div_yield_str_perc()[:-2]) # Remove % sign
@@ -246,7 +248,7 @@ class OptionFrame(tk.Frame):
         
         # Option Type
         type_tag = tk.Label(self, text="Option Type", font=("Arial", 14), fg=self.fg, bg=self.bg)
-        type_tag.place(x=0, y=410)
+        type_tag.place(x=50, y=410)
         
         type_control_var = tk.IntVar(value=(1 if self.option.option_type is OptionType.Call else 2))
         self.inputs[OptionFrame.option_type] = type_control_var
@@ -318,7 +320,7 @@ class OptionFrame(tk.Frame):
         delta_tag = tk.Label(self, text="Delta", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
         delta_tag.place(x=1000, y=280)
         
-        delta_label = tk.Label(self, text=f"{round(self.option.delta(),2)}", font=("Arial", 18, "bold"),
+        delta_label = tk.Label(self, text=f"{round(self.option.delta(),self.greeks_round)}", font=("Arial", 18, "bold"),
             fg=self.fg, bg="light grey", anchor="e")
         delta_label.place(x=1000, y=310, width=300, height=35)
         self.outputs[OptionFrame.delta_label] = delta_label
@@ -327,7 +329,7 @@ class OptionFrame(tk.Frame):
         gamma_tag = tk.Label(self, text="Gamma", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
         gamma_tag.place(x=1000, y=350)
         
-        gamma_label = tk.Label(self, text=f"{round(self.option.gamma(),2)}", font=("Arial", 18, "bold"),
+        gamma_label = tk.Label(self, text=f"{round(self.option.gamma(),self.greeks_round)}", font=("Arial", 18, "bold"),
             fg=self.fg, bg="light grey", anchor="e")
         gamma_label.place(x=1000, y=380, width=300, height=35)
         self.outputs[OptionFrame.gamma_label] = gamma_label
@@ -336,7 +338,7 @@ class OptionFrame(tk.Frame):
         vega_tag = tk.Label(self, text="Vega", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
         vega_tag.place(x=1000, y=420)
         
-        vega_label = tk.Label(self, text=f"{round(self.option.vega(),2)}", font=("Arial", 18, "bold"),
+        vega_label = tk.Label(self, text=f"{round(self.option.vega(),self.greeks_round)}", font=("Arial", 18, "bold"),
             fg=self.fg, bg="light grey", anchor="e")
         vega_label.place(x=1000, y=450, width=300, height=35)
         self.outputs[OptionFrame.vega_label] = vega_label
@@ -345,7 +347,7 @@ class OptionFrame(tk.Frame):
         rho_tag = tk.Label(self, text="Rho", font=("Arial", 18, "bold"), fg=self.fg, bg=self.bg)
         rho_tag.place(x=1000, y=490)
         
-        rho_label = tk.Label(self, text=f"{round(self.option.rho(),2)}", font=("Arial", 18, "bold"),
+        rho_label = tk.Label(self, text=f"{round(self.option.rho(),self.greeks_round)}", font=("Arial", 18, "bold"),
             fg=self.fg, bg="light grey", anchor="e")
         rho_label.place(x=1000, y=520, width=300, height=35)
         self.outputs[OptionFrame.rho_label] = rho_label
@@ -355,7 +357,7 @@ class OptionFrame(tk.Frame):
         # Export Report Button
         visualize_button = tk.Button(
             self,
-            text="Visualise Risk",
+            text="Visualize Risk",
             font=("Arial", 24, "bold"),
             bg="#f0f3f5",
             fg="#1f3044",
